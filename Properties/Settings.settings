@@ -1,0 +1,52 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="AzureTracker.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="Organization" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Cathworks</Value>
+    </Setting>
+    <Setting Name="PAT" Type="System.String" Scope="User">
+      <Value Profile="(Default)">your azure PAT</Value>
+    </Setting>
+    <Setting Name="WorkItemTypes" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Bug;User Story;Task;Epic;Feature</Value>
+    </Setting>
+    <Setting Name="BuildNotOlderThanDays" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">30</Value>
+    </Setting>
+    <Setting Name="DefaultFilters" Type="System.String" Scope="User">
+      <Value Profile="(Default)">
+                  {
+                  "defaultfilters": [
+                  {
+                  "type": "WorkItem",
+                  "fields": [
+                  {
+                  "Status": "Active;New;Ready"
+                  }
+                  ]
+                  },
+                  {
+                  "type": "PR",
+                  "fields": [
+                  {
+                  "IsDraft": "false"
+                  },
+                  {
+                  "Status": "Active"
+                  }
+                  ]
+                  },
+                  {
+                  "type": "Build",
+                  "fields": [
+                  {
+                  "RepoName": "Repo1;Repo12;Repo3"
+                  }
+                  ]
+                  }
+                  ]
+                  }</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>
