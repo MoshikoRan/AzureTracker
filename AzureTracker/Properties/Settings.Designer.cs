@@ -25,7 +25,7 @@ namespace AzureTracker.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("your organozation name")]
+        [global::System.Configuration.DefaultSettingValueAttribute("your organization name")]
         public string Organization {
             get {
                 return ((string)(this["Organization"]));
