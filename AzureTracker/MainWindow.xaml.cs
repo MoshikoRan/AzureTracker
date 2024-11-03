@@ -1,11 +1,5 @@
-﻿using CefSharp.DevTools.Browser;
-using CefSharp.DevTools.CacheStorage;
-using CefSharp.Wpf;
-using Microsoft.Azure.Pipelines.WebApi;
-using Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models;
+﻿using CefSharp.Wpf;
 using System;
-using System.Drawing;
-using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;

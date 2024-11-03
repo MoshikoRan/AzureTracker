@@ -1,7 +1,4 @@
 ﻿using Microsoft.TeamFoundation.SourceControl.WebApi;
-using Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models;
-using Microsoft.VisualBasic;
-using Microsoft.VisualStudio.Services.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
