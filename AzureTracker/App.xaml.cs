@@ -19,7 +19,7 @@ namespace PRTracker
     {
         private void Application_Startup(object sender, StartupEventArgs e)
         {
-            if (!Cef.IsInitialized)
+            if (!Cef.IsInitialized.HasValue || !Cef.IsInitialized.Value)
             {
                 string? sExePath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 
