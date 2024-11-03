@@ -4,3 +4,5 @@
 
 /.vs
 /AzureTracker/obj
+/AzureTracker/Properties/Settings.Designer.cs
+/AzureTracker/Properties/Settings.settings
