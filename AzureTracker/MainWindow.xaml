@@ -1,0 +1,42 @@
+﻿<Window x:Class="AzureTracker.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:wpfCef="clr-namespace:CefSharp.Wpf;assembly=CefSharp.Wpf"
+        mc:Ignorable="d" Loaded="Window_Loaded"
+        Title="Azure Tracker" Height="800" Width="1400">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="40"/>
+            <RowDefinition Height="500"/>
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" Margin="5">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition MaxWidth="800" Width="Auto"/>
+                <ColumnDefinition MinWidth="200"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0" Orientation="Horizontal">
+                <Button Width="80" Content="Clear Filter" Command="{Binding CmdClearFilter}" IsEnabled="{Binding EnableSelection}"/>
+                <Button Margin="10,0,0,0" Width="80" Content="{Binding SyncAbortBtnText}" Command="{Binding CmdSyncAbort}" />
+                <TextBlock Margin="10,0,0,0" Text="{Binding Status}" FontSize="16" VerticalAlignment="Center"/>
+            </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Margin="30,0,0,0" Width="120" Content="Reset Tab View" Click="ResetView_Click" IsEnabled="{Binding EnableSelection}"/>
+                <Button Margin="10,0,0,0" Width="120" Content="View Log" Click="ViewLog_Click"/>
+                <Button Margin="10,0,0,0" Width="120" Content="About" Command="{Binding CmdAbout}"/>
+            </StackPanel>
+        </Grid>
+        <TabControl Margin="5,0" x:Name="AzureObjectTabCtrl" Grid.Row="1" IsEnabled="{Binding EnableSelection}"
+                    SelectionChanged ="AzureObjectTabCtrl_Selected" />
+
+        <Grid Grid.Row="2" Margin="5,0">            
+            <TabControl FontSize="16" x:Name="ChromeTabCtrl" IsEnabled="{Binding EnableSelection}" />
+        </Grid>
+
+        <GridSplitter Grid.Row="1" Height="5" Background="Gray" 
+              HorizontalAlignment="Stretch" VerticalAlignment="Bottom" ResizeDirection="Rows" />
+    </Grid>
+</Window>
