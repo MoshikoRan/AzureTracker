@@ -137,6 +137,9 @@ namespace AzureTracker
             PropertyInfo[]? propertyInfos = type?.GetProperties();
             for (int i = 0; i < propertyInfos?.Length; i++)
             {
+                if (propertyInfos[i].Name == "Uri")
+                    continue; 
+
                 GridViewColumn col = new GridViewColumn();
                 col.Header = propertyInfos[i].Name;
                 col.DisplayMemberBinding = new Binding(propertyInfos[i].Name);
