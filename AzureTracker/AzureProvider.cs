@@ -149,7 +149,7 @@ namespace AzureTracker
             switch (azureObject)
             {
                 case AzureObject.PR:
-                    PRs = GetPRs(PullRequestStatus.All);
+                    PRs = (PRs.Count == 0) ? GetPRs(PullRequestStatus.All) : GetPRs(PullRequestStatus.Active);
                     break;
                 case AzureObject.WorkItem:
                     WorkItems = GetWorkItems();
@@ -454,7 +454,7 @@ namespace AzureTracker
         #region PR
         private Dictionary<int, AzureObjectBase> GetPRs(PullRequestStatus status)
         {
-            Dictionary<int, AzureObjectBase> dicPRs = new Dictionary<int, AzureObjectBase>();
+            Dictionary<int, AzureObjectBase> dicPRs = PRs;
             for (int i = 0; i < Projects.Count; ++i)
             {
                 if (Aborting)
@@ -496,7 +496,7 @@ namespace AzureTracker
                         if (jsonPR != null)
                         {
                             PR pr = ParsePRResponse(jsonPR);
-                            dicPRs.Add(pr.ID,pr);
+                            dicPRs[pr.ID] = pr;
                         }
                     }
                     skip += PRS_PER_CALL;
