@@ -1,4 +1,5 @@
-﻿using Microsoft.TeamFoundation.SourceControl.WebApi;
+﻿using Microsoft.TeamFoundation.Build.WebApi;
+using Microsoft.TeamFoundation.SourceControl.WebApi;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -473,6 +474,15 @@ namespace AzureTracker
         {
             const int PRS_PER_CALL = 101;
             int skip = 0;
+            Dictionary<int, AzureObjectBase> activePRs = new Dictionary<int, AzureObjectBase>();
+            if (status == PullRequestStatus.Active)
+            {
+                string sActive = PullRequestStatus.Active.ToString().ToLower();
+                activePRs = PRs.Where(
+                    pr => pr.Value.Status == sActive && pr.Value.ProjectName == p?.Name).
+                    ToDictionary(p=>p.Key, p=>p.Value);
+            }
+
             while (true)
             {
                 if (Aborting)
@@ -496,10 +506,40 @@ namespace AzureTracker
                         if (jsonPR != null)
                         {
                             PR pr = ParsePRResponse(jsonPR);
+
+                            if (activePRs.Count>0)
+                            {
+                                if (activePRs.ContainsKey(pr.ID))
+                                {
+                                    activePRs.Remove(pr.ID);
+                                }
+                            }
                             dicPRs[pr.ID] = pr;
                         }
                     }
                     skip += PRS_PER_CALL;
+                }
+                else
+                {
+                    throw new Exception($"GetPRsByProject => {sResponse}");
+                }
+            }
+
+            //update active PRs that are not active anymore
+            foreach (var pr in activePRs)
+            {
+                string sResponse = string.Empty;
+                string uri =
+                    $"{AzureEndPoint}/{p?.Name}/_apis/git/pullrequests?{pr.Key}?{API_VERSION}";
+
+                if (AzureGetRequest(uri, out sResponse))
+                {
+                    JsonNode? json = JsonNode.Parse(sResponse);
+
+                    if (json != null)
+                    {
+                        activePRs[pr.Key] = ParsePRResponse(json);
+                    }
                 }
                 else
                 {
