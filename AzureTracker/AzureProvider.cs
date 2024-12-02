@@ -1,5 +1,4 @@
-﻿using Microsoft.TeamFoundation.Build.WebApi;
-using Microsoft.TeamFoundation.SourceControl.WebApi;
+﻿using Microsoft.TeamFoundation.SourceControl.WebApi;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -525,7 +524,7 @@ namespace AzureTracker
                 }
             }
 
-            //update active PRs that are not active anymore
+            //update PRs that are not active anymore
             foreach (var pr in activePRs)
             {
                 string sResponse = string.Empty;
