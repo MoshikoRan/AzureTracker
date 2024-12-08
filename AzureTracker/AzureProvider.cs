@@ -559,13 +559,14 @@ namespace AzureTracker
         {
             const int PRS_PER_CALL = 101;
             int skip = 0;
-            Dictionary<int, AzureObjectBase> activePRs = new Dictionary<int, AzureObjectBase>();
+            HashSet<int>? activePRs = null;
             if (status == PullRequestStatus.Active)
             {
                 string sActive = PullRequestStatus.Active.ToString().ToLower();
                 activePRs = PRs.Where(
-                    pr => pr.Value.Status == sActive && pr.Value.ProjectName == p?.Name).
-                    ToDictionary(p=>p.Key, p=>p.Value);
+                    pr => pr.Value.Status == sActive &&
+                    pr.Value.ProjectName == p?.Name)
+                    .Select(p => p.Value.ID).ToHashSet();
             }
 
             while (true)
@@ -592,9 +593,9 @@ namespace AzureTracker
                         {
                             PR pr = ParsePR(jsonPR);
 
-                            if (activePRs.Count>0)
+                            if (activePRs?.Count >0)
                             {
-                                if (activePRs.ContainsKey(pr.ID))
+                                if (activePRs.Contains(pr.ID))
                                 {
                                     activePRs.Remove(pr.ID);
                                 }
@@ -611,24 +612,27 @@ namespace AzureTracker
             }
 
             //update PRs that are not active anymore
-            foreach (var pr in activePRs)
+            if (activePRs != null)
             {
-                string sResponse = string.Empty;
-                string uri =
-                    $"{AzureEndPoint}/{p?.Name}/_apis/git/pullrequests?{pr.Key}?{API_VERSION}";
-
-                if (AzureGetRequest(uri, out sResponse))
+                foreach (var prID in activePRs)
                 {
-                    JsonNode? json = JsonNode.Parse(sResponse);
+                    string sResponse = string.Empty;
+                    string uri =
+                        $"{AzureEndPoint}/{p?.Name}/_apis/git/pullrequests/{prID}?{API_VERSION}";
 
-                    if (json != null)
+                    if (AzureGetRequest(uri, out sResponse))
                     {
-                        activePRs[pr.Key] = ParsePR(json);
+                        JsonNode? json = JsonNode.Parse(sResponse);
+
+                        if (json != null)
+                        {
+                            dicPRs[prID] = ParsePR(json);
+                        }
                     }
-                }
-                else
-                {
-                    throw new Exception($"GetPRsByProject => {sResponse}");
+                    else
+                    {
+                        throw new Exception($"GetPRsByProject => {sResponse}");
+                    }
                 }
             }
         }

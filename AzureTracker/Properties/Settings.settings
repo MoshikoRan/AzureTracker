@@ -3,16 +3,16 @@
   <Profiles />
   <Settings>
     <Setting Name="Organization" Type="System.String" Scope="User">
-      <Value Profile="(Default)">your organization name</Value>
-    </Setting>
-    <Setting Name="PAT" Type="System.String" Scope="User">
-      <Value Profile="(Default)">your azure PAT</Value>
+      <Value Profile="(Default)">Cathworks</Value>
     </Setting>
     <Setting Name="WorkItemTypes" Type="System.String" Scope="User">
       <Value Profile="(Default)">Bug;User Story;Task;Epic;Feature</Value>
     </Setting>
     <Setting Name="BuildNotOlderThanDays" Type="System.Double" Scope="User">
       <Value Profile="(Default)">30</Value>
+    </Setting>
+    <Setting Name="PAT" Type="System.String" Scope="User">
+      <Value Profile="(Default)">xgxmnw5bo5ouph7mqbwn7rgnmak5lvsxn4lsoke6c7qoyurncrka</Value>
     </Setting>
     <Setting Name="DefaultFilters" Type="System.String" Scope="User">
       <Value Profile="(Default)">
@@ -41,7 +41,7 @@
                   "type": "Build",
                   "fields": [
                   {
-                  "RepoName": "Repo1;Repo12;Repo3"
+                  "RepoName": "ServiceUtility_git;FFRAngio_AlgoMatlab;FFRAngio_Application"
                   }
                   ]
                   }
