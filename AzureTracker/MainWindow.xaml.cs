@@ -80,6 +80,16 @@ namespace AzureTracker
                 vm.Init();
             }
         }
+        private void Window_Closed(object sender, EventArgs e)
+        {
+            var vm = DataContext as MainViewModel;
+            if (vm != null)
+            {
+                vm.UnInit();
+            }
+
+            Application.Current.Shutdown();
+        }
 
         private string GetTabHeader(AzureObjectBase? aob)
         {

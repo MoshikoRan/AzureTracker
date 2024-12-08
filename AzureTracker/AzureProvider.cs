@@ -1,12 +1,14 @@
 ﻿using Microsoft.TeamFoundation.SourceControl.WebApi;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading;
 
@@ -99,11 +101,95 @@ namespace AzureTracker
             public double BuildNotOlderThanDays { get; set; } = 5;
 
             public int MaxBuildsPerDefinition { get; set; } = 100;
+
+            public bool UseCaching = true;
         }
         public AzureProvider(AzureProviderConfig apc)
         {
+            if (apc.UseCaching)
+            {
+                LoadCahcedAzureItems();
+            }
             m_APConfig = apc;
             Projects = GetProjectList();
+        }
+        private AzureProvider() { }
+
+        const string Cache = "AzureItemsCache";
+        readonly string PRCache = Path.Combine(Cache, "PRs");
+        readonly string WITCache = Path.Combine(Cache, "WorkItems");
+        readonly string BuildCache = Path.Combine(Cache, "Builds");
+        private void LoadCahcedAzureItems()
+        {
+            if (Directory.Exists(Cache))
+            {
+                try
+                {
+                    FileStream fileStream = new FileStream(PRCache, FileMode.Open, FileAccess.Read);
+                    var obj = JsonNode.Parse(fileStream);
+                    if (obj != null)
+                    {
+                        foreach (var pr in obj.AsObject().AsEnumerable())
+                        {
+                            PRs[int.Parse(pr.Key)] = ParsePR(pr.Value);
+                        }
+                    }
+
+                    fileStream = new FileStream(WITCache, FileMode.Open, FileAccess.Read);
+                    obj = JsonNode.Parse(fileStream);
+                    if (obj != null)
+                    {
+                        foreach (var wit in obj.AsObject().AsEnumerable())
+                        {
+                            WorkItems[int.Parse(wit.Key)] = ParseWIT(wit.Value);
+                        }
+                    }
+
+                    fileStream = new FileStream(BuildCache, FileMode.Open, FileAccess.Read);
+                    obj = JsonNode.Parse(fileStream);
+                    if (obj != null)
+                    {
+                        foreach (var build in obj.AsObject().AsEnumerable())
+                        {
+                            Builds[int.Parse(build.Key)] = ParseBuild(build.Value);
+                        }
+                    }
+                }
+                catch (Exception ex) 
+                {
+                    Logger.Instance.Error(ex.Message);
+                }
+
+            }
+        }
+
+        public void Save()
+        {
+            if (m_APConfig.UseCaching)
+            {
+                SaveAzureItems();
+            }
+        }
+
+        private void SaveAzureItems()
+        {
+            if (!Directory.Exists(Cache))
+                Directory.CreateDirectory(Cache);
+
+            FileStream fileStream = new FileStream(PRCache, FileMode.Create, FileAccess.Write);
+            JsonSerializer.Serialize(fileStream,PRs);
+            fileStream.Flush();
+            fileStream.Close();
+
+            fileStream = new FileStream(WITCache, FileMode.Create, FileAccess.Write);
+            JsonSerializer.Serialize(fileStream, WorkItems);
+            fileStream.Flush();
+            fileStream.Close();
+
+            fileStream = new FileStream(BuildCache, FileMode.Create, FileAccess.Write);
+            JsonSerializer.Serialize(fileStream, Builds);
+            fileStream.Flush();
+            fileStream.Close();
         }
 
         void SetClientAuth(HttpClient client)
@@ -504,7 +590,7 @@ namespace AzureTracker
                         JsonNode? jsonPR = jsonPRs[i];
                         if (jsonPR != null)
                         {
-                            PR pr = ParsePRResponse(jsonPR);
+                            PR pr = ParsePR(jsonPR);
 
                             if (activePRs.Count>0)
                             {
@@ -537,7 +623,7 @@ namespace AzureTracker
 
                     if (json != null)
                     {
-                        activePRs[pr.Key] = ParsePRResponse(json);
+                        activePRs[pr.Key] = ParsePR(json);
                     }
                 }
                 else
@@ -547,7 +633,7 @@ namespace AzureTracker
             }
         }
 
-        PR ParsePRResponse(JsonNode? jsonPR)
+        PR ParsePR(JsonNode? jsonPR)
         {
             PR pr = new PR();
 
@@ -725,7 +811,7 @@ namespace AzureTracker
                 if (aob is PR)
                 {
                     dic = PRs;
-                    updatedAob = ParsePRResponse(jsonNode);
+                    updatedAob = ParsePR(jsonNode);
                 }
                 else if (aob is WIT)
                 {

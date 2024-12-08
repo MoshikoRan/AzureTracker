@@ -37,6 +37,16 @@ namespace AzureTracker
             ResetFilters();
             Sync(AzureObject.None);
         }
+
+        internal void UnInit()
+        {
+            if (m_azureProvider != null)
+            {
+                m_azureProvider.DataFetchEvent -= AzureProveiderDataFetchHandler;
+                m_azureProvider.Save();
+                m_azureProvider = null;
+            }
+        }
         private void CreateVMDictionary()
         {
             foreach (var obj in Enum.GetValues(typeof(AzureObject)))
@@ -48,7 +58,6 @@ namespace AzureTracker
                 }
             }
         }
-
         private void AzureProveiderDataFetchHandler(AzureObject azureObject, string? projName, string? param)
         {
             Logger.Instance.Info($"Fetching {azureObject} from {projName} {param}...");
