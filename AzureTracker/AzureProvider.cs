@@ -1,6 +1,7 @@
 ﻿using Microsoft.TeamFoundation.SourceControl.WebApi;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -111,9 +112,23 @@ namespace AzureTracker
                 LoadCahcedAzureItems();
             }
             m_APConfig = apc;
+
+            if (m_APConfig.WorkItemTypes.Length > 0)
+            {
+                foreach (var type in m_APConfig.WorkItemTypes)
+                {
+                    m_witTypeSubQuery += $"[System.WorkItemType] = '{type}' OR ";
+                }
+                m_witTypeSubQuery = " AND (" + m_witTypeSubQuery.Remove(m_witTypeSubQuery.Length - 4, 3) + ")";
+            }
+
             Projects = GetProjectList();
         }
+
+        private string m_witTypeSubQuery = string.Empty;
         private AzureProvider() { }
+
+        #region Cache
 
         const string Cache = "AzureItemsCache";
         readonly string PRCache = Path.Combine(Cache, "PRs");
@@ -123,44 +138,56 @@ namespace AzureTracker
         {
             if (Directory.Exists(Cache))
             {
-                try
-                {
-                    FileStream fileStream = new FileStream(PRCache, FileMode.Open, FileAccess.Read);
-                    var obj = JsonNode.Parse(fileStream);
-                    if (obj != null)
-                    {
-                        foreach (var pr in obj.AsObject().AsEnumerable())
-                        {
-                            PRs[int.Parse(pr.Key)] = ParsePR(pr.Value);
-                        }
-                    }
-
-                    fileStream = new FileStream(WITCache, FileMode.Open, FileAccess.Read);
-                    obj = JsonNode.Parse(fileStream);
-                    if (obj != null)
-                    {
-                        foreach (var wit in obj.AsObject().AsEnumerable())
-                        {
-                            WorkItems[int.Parse(wit.Key)] = ParseWIT(wit.Value);
-                        }
-                    }
-
-                    fileStream = new FileStream(BuildCache, FileMode.Open, FileAccess.Read);
-                    obj = JsonNode.Parse(fileStream);
-                    if (obj != null)
-                    {
-                        foreach (var build in obj.AsObject().AsEnumerable())
-                        {
-                            Builds[int.Parse(build.Key)] = ParseBuild(build.Value);
-                        }
-                    }
-                }
-                catch (Exception ex) 
-                {
-                    Logger.Instance.Error(ex.Message);
-                }
-
+                LoadFromCache<PR>(PRCache, PRs);
+                LoadFromCache<WIT>(WITCache, WorkItems);
+                LoadFromCache<Build>(PRCache, Builds);
             }
+        }
+
+        void LoadFromCache<T>(string cacheName, Dictionary<int, AzureObjectBase> dest) where T : AzureObjectBase, new()
+        {
+            try
+            {
+                if (File.Exists(cacheName))
+                {
+                    using (FileStream fileStream = new FileStream(cacheName, FileMode.Open, FileAccess.Read))
+                    {
+                        var obj = JsonNode.Parse(fileStream);
+                        if (obj != null)
+                        {
+                            foreach (var item in obj.AsObject().AsEnumerable())
+                            {
+                                if (item.Value != null)
+                                    dest[int.Parse(item.Key)] = Parse<T>(item.Value);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex) 
+            {
+                Logger.Instance.Error(ex.Message);
+            }
+        }
+
+        T Parse<T>(JsonNode node) where T : new()
+        {
+            var tType = typeof(T);
+            T result = new T();
+            foreach (var pi in tType.GetProperties())
+            {
+                string key = pi.Name;
+                var val = node?[key];
+                if (val! != null)
+                {
+                    var valStr = val.ToString();
+                    pi.SetValue(
+                        result, 
+                        TypeDescriptor.GetConverter(pi.PropertyType).ConvertFromString(valStr));
+                }
+            }
+
+            return result;
         }
 
         public void Save()
@@ -176,21 +203,23 @@ namespace AzureTracker
             if (!Directory.Exists(Cache))
                 Directory.CreateDirectory(Cache);
 
-            FileStream fileStream = new FileStream(PRCache, FileMode.Create, FileAccess.Write);
-            JsonSerializer.Serialize(fileStream,PRs);
-            fileStream.Flush();
-            fileStream.Close();
-
-            fileStream = new FileStream(WITCache, FileMode.Create, FileAccess.Write);
-            JsonSerializer.Serialize(fileStream, WorkItems);
-            fileStream.Flush();
-            fileStream.Close();
-
-            fileStream = new FileStream(BuildCache, FileMode.Create, FileAccess.Write);
-            JsonSerializer.Serialize(fileStream, Builds);
-            fileStream.Flush();
-            fileStream.Close();
+            SaveAzureItems<PR>(PRCache, PRs);
+            SaveAzureItems<WIT>(WITCache, WorkItems);
+            SaveAzureItems<Build>(BuildCache, Builds);
         }
+
+        void SaveAzureItems<T>(string cacheName, Dictionary<int, AzureObjectBase> src) where T : AzureObjectBase 
+        {
+            if (src.Count>0)
+            {
+                using (FileStream fileStream = new FileStream(cacheName, FileMode.Create, FileAccess.Write))
+                {
+                    JsonSerializer.Serialize(fileStream, src.ToDictionary(p => p.Key, p => (T)p.Value));
+                }
+            }
+        }
+
+        #endregion
 
         void SetClientAuth(HttpClient client)
         {
@@ -336,49 +365,38 @@ namespace AzureTracker
         private void GetWorkItemsByProject(Dictionary<int, AzureObjectBase> dicWorkItems, Project? p)
         {
             bool success = false;
-            string sResponse = string.Empty;
-            using (HttpClient client = new HttpClient())
+
+            const int WIT_PER_CALL = 19999;
+
+            int skip = -1;
+            if (dicWorkItems.Count > 0) //not first time
             {
-                SetClientAuth(client);
-
-                string sTypes = string.Empty;
-                if (m_APConfig.WorkItemTypes.Length > 0)
-                {
-                    foreach (var type in m_APConfig.WorkItemTypes)
-                    {
-                        sTypes += $"[System.WorkItemType] = '{type}' OR ";
-                    }
-                    sTypes = " AND (" + sTypes.Remove(sTypes.Length - 4, 3) + ")";
-                }
-
-                const int WIT_PER_CALL = 19999;
-                int? skip = 0;
-                //Get new items per project
                 var projWITs = dicWorkItems.Values.Where(x => x.ProjectName == p?.Name).OrderByDescending(x => x.ID);
                 if (projWITs.Count() > 0)
                 {
                     skip = projWITs.First().ID;
                 }
+                //update open items per project
+                var openProjItems = projWITs.Where(x => IsActiveWorkItem(x)).Select(x => x.ID).ToList();
 
-                if (skip > 0) //not first time
+                if (openProjItems.Count() > 0)
                 {
-                    //update open items per project
-                    var openProjItems = projWITs.Where(x => IsActiveWorkItem(x)).Select(x => x.ID).ToList();
-
-                    if (openProjItems.Count() > 0)
+                    int count = 199;
+                    for (int i = 0; i < openProjItems.Count(); i += count)
                     {
-                        int count = 199;
-                        for (int i = 0; i < openProjItems.Count(); i += count)
-                        {
-                            if (Aborting)
-                                break;
-                            List<int> lstIDRange = openProjItems.GetRange(i, Math.Min(openProjItems.Count - i, count));
-                            if (lstIDRange?.Count > 0)
-                                GetWorkItemsByIDs(dicWorkItems, lstIDRange, true);
-                        }
+                        if (Aborting)
+                            break;
+                        List<int> lstIDRange = openProjItems.GetRange(i, Math.Min(openProjItems.Count - i, count));
+                        if (lstIDRange?.Count > 0)
+                            GetWorkItemsByIDs(dicWorkItems, lstIDRange, true);
                     }
                 }
+            }
 
+            string sResponse = string.Empty;
+            using (HttpClient client = new HttpClient())
+            {
+                SetClientAuth(client);
                 while (true)
                 {
                     if (Aborting)
@@ -386,7 +404,7 @@ namespace AzureTracker
 
                     var jsonstr = "{\n \"query\":\""
                         + $"SELECT [System.Id] FROM WorkItems Where (([System.TeamProject] = '{p?.Name}')"
-                        + $"{sTypes} AND ([System.Id]>{skip})) "
+                        + $"{m_witTypeSubQuery} AND ([System.Id]>{skip})) "
                         + $"ORDER BY [System.Id] ASC"
                         + "\" \n}";
 
