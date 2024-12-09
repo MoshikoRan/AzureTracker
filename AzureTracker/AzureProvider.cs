@@ -473,7 +473,7 @@ namespace AzureTracker
                         }
                         else
                         {
-                            dicWorkItems.Add(wit.ID, wit);
+                            dicWorkItems[wit.ID] = wit;
                         }
                     }
                 }
@@ -722,7 +722,7 @@ namespace AzureTracker
                         if (jsonBuild != null)
                         {
                             Build build = ParseBuild(jsonBuild);
-                            dicBuilds.Add(build.ID, build);
+                            dicBuilds[build.ID] = build;
                         }
                     }
                 }
