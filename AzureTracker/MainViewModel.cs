@@ -354,20 +354,27 @@ namespace AzureTracker
 
         internal void SyncAzureObject(AzureObjectBase? aob)
         {
-            if (aob != null && m_azureProvider != null)
+            try
             {
-                if (m_azureProvider.SyncAzureObject(aob))
+                if (aob != null && m_azureProvider != null)
                 {
-                    AzureObject ao;
-                    if (Enum.TryParse(aob.GetType().Name, out ao))
+                    if (m_azureProvider.SyncAzureObject(aob))
                     {
-                        SetVMDictionaryData(ao);
-                    }
-                    else
-                    {
-                        Logger.Instance.Error($"SyncAzureObject: could not parse azure object type");
+                        AzureObject ao;
+                        if (Enum.TryParse(aob.GetType().Name, out ao))
+                        {
+                            SetVMDictionaryData(ao);
+                        }
+                        else
+                        {
+                            Logger.Instance.Error($"SyncAzureObject: could not parse azure object type");
+                        }
                     }
                 }
+            }
+            catch (Exception e)
+            {
+                Logger.Instance.Error(e.Message);
             }
         }
 

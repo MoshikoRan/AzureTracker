@@ -821,7 +821,7 @@ namespace AzureTracker
             }
             else if (aob is Build)
             {
-                uri = $"{AzureEndPoint}/{aob?.ProjectName}/_apis/git/build/builds/{aob?.ID}?{API_VERSION}";
+                uri = $"{AzureEndPoint}/{aob?.ProjectName}/_apis/build/builds/{aob?.ID}?{API_VERSION}";
             }
 
             string sResponse = string.Empty;
