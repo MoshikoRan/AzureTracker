@@ -39,7 +39,7 @@ namespace AzureTracker
         public DateTime? CreatedDate { get; set; }
     }
 
-    public class WIT : AzureObjectBase 
+    public class WorkItem : AzureObjectBase 
     {
         public DateTime? ChangedDate { get; set; }
         public string? Type { get; set; } = string.Empty;
@@ -139,7 +139,7 @@ namespace AzureTracker
             if (Directory.Exists(Cache))
             {
                 LoadFromCache<PR>(PRCache, PRs);
-                LoadFromCache<WIT>(WITCache, WorkItems);
+                LoadFromCache<WorkItem>(WITCache, WorkItems);
                 LoadFromCache<Build>(PRCache, Builds);
             }
         }
@@ -204,7 +204,7 @@ namespace AzureTracker
                 Directory.CreateDirectory(Cache);
 
             SaveAzureItems<PR>(PRCache, PRs);
-            SaveAzureItems<WIT>(WITCache, WorkItems);
+            SaveAzureItems<WorkItem>(WITCache, WorkItems);
             SaveAzureItems<Build>(BuildCache, Builds);
         }
 
@@ -482,7 +482,7 @@ namespace AzureTracker
 
                     if (jsonWIT != null)
                     {
-                        WIT wit = ParseWIT(jsonWIT);
+                        WorkItem wit = ParseWIT(jsonWIT);
                         if (bUpdate)
                         {
                             var item = dicWorkItems[wit.ID];
@@ -517,9 +517,9 @@ namespace AzureTracker
             }
         }
 
-        private WIT ParseWIT(JsonNode? jsonWIT)
+        private WorkItem ParseWIT(JsonNode? jsonWIT)
         {
-            WIT wit = new WIT();
+            WorkItem wit = new WorkItem();
 
             var id = jsonWIT?["id"]?.GetValue<int>();
             wit.ID = id.HasValue? id.Value : -1;
@@ -815,7 +815,7 @@ namespace AzureTracker
             {
                 uri = $"{AzureEndPoint}/{aob?.ProjectName}/_apis/git/pullrequests/{aob?.ID}?{API_VERSION}";
             }
-            else if (aob is WIT)
+            else if (aob is WorkItem)
             {
                 uri = $"{AzureEndPoint}/{aob?.ProjectName}/_apis/wit/workitems/{aob?.ID}?{API_VERSION}";
             }
@@ -835,7 +835,7 @@ namespace AzureTracker
                     dic = PRs;
                     updatedAob = ParsePR(jsonNode);
                 }
-                else if (aob is WIT)
+                else if (aob is WorkItem)
                 {
                     dic = WorkItems;
                     updatedAob = ParseWIT(jsonNode);

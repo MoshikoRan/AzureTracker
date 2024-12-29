@@ -34,6 +34,8 @@ namespace AzureTracker
                 {
                     GenerateGridViewColumns();
                 }
+                if (_lastHeaderClicked != null)
+                    SortByHeader(_lastHeaderClicked, _lastDirection);
             }
             else if (e.PropertyName == AzureObjectListViewModel.CLEAR_FILTER)
             {
@@ -70,12 +72,12 @@ namespace AzureTracker
         private void GridViewColumnHeaderClickedHandler(object sender, RoutedEventArgs e)
         {
             var headerClicked = e.OriginalSource as GridViewColumnHeader;
-            ListSortDirection direction;
 
             if (headerClicked != null)
             {
                 if (headerClicked.Role != GridViewColumnHeaderRole.Padding)
                 {
+                    ListSortDirection direction;
                     if (headerClicked != _lastHeaderClicked)
                     {
                         direction = ListSortDirection.Ascending;
@@ -91,33 +93,37 @@ namespace AzureTracker
                             direction = ListSortDirection.Ascending;
                         }
                     }
-
-                    var columnBinding = headerClicked.Column.DisplayMemberBinding as Binding;
-                    var sortBy = columnBinding?.Path.Path ?? headerClicked.Column.Header as string;
-
-                    Sort(sortBy, direction);
-
-                    if (direction == ListSortDirection.Ascending)
-                    {
-                        headerClicked.Column.HeaderTemplate =
-                          Resources["HeaderTemplateArrowUp"] as DataTemplate;
-                    }
-                    else
-                    {
-                        headerClicked.Column.HeaderTemplate =
-                          Resources["HeaderTemplateArrowDown"] as DataTemplate;
-                    }
-
-                    // Remove arrow from previously sorted header
-                    if (_lastHeaderClicked != null && _lastHeaderClicked != headerClicked)
-                    {
-                        _lastHeaderClicked.Column.HeaderTemplate = null;
-                    }
-
-                    _lastHeaderClicked = headerClicked;
-                    _lastDirection = direction;
+                    SortByHeader(headerClicked, direction);
                 }
             }
+        }
+
+        private void SortByHeader(GridViewColumnHeader headerClicked, ListSortDirection direction)
+        {
+            var columnBinding = headerClicked.Column.DisplayMemberBinding as Binding;
+            var sortBy = columnBinding?.Path.Path ?? headerClicked.Column.Header as string;
+
+            Sort(sortBy, direction);
+
+            if (direction == ListSortDirection.Ascending)
+            {
+                headerClicked.Column.HeaderTemplate =
+                  Resources["HeaderTemplateArrowUp"] as DataTemplate;
+            }
+            else
+            {
+                headerClicked.Column.HeaderTemplate =
+                  Resources["HeaderTemplateArrowDown"] as DataTemplate;
+            }
+
+            // Remove arrow from previously sorted header
+            if (_lastHeaderClicked != null && _lastHeaderClicked != headerClicked)
+            {
+                _lastHeaderClicked.Column.HeaderTemplate = null;
+            }
+
+            _lastHeaderClicked = headerClicked;
+            _lastDirection = direction;
         }
         private void Sort(string? sortBy, ListSortDirection direction)
         {

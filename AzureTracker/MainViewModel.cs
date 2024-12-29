@@ -318,10 +318,15 @@ namespace AzureTracker
             foreach (var obj in Enum.GetValues(typeof(AzureObject)))
             {
                 var val = (AzureObject)obj;
-                if (val != AzureObject.None && m_azureProvider != null)
-                {
-                    AzureObjectVMDictionary[val].SetData(data: m_azureProvider.Get(val));
-                }
+                SetVMDictionaryData(val);
+            }
+        }
+
+        private void SetVMDictionaryData(AzureObject ao)
+        {
+            if (ao != AzureObject.None && m_azureProvider != null)
+            {
+                AzureObjectVMDictionary[ao].SetData(data: m_azureProvider.Get(ao));
             }
         }
 
@@ -349,11 +354,19 @@ namespace AzureTracker
 
         internal void SyncAzureObject(AzureObjectBase? aob)
         {
-            if (m_azureProvider != null)
+            if (aob != null && m_azureProvider != null)
             {
                 if (m_azureProvider.SyncAzureObject(aob))
                 {
-                    SetVMDictionaryData();
+                    AzureObject ao;
+                    if (Enum.TryParse(aob.GetType().Name, out ao))
+                    {
+                        SetVMDictionaryData(ao);
+                    }
+                    else
+                    {
+                        Logger.Instance.Error($"SyncAzureObject: could not parse azure object type");
+                    }
                 }
             }
         }
