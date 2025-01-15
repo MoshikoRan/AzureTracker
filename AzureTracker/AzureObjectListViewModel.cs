@@ -9,6 +9,7 @@ namespace AzureTracker
     {
         public const string INIT_VIEW = "InitView";
         public const string CLEAR_FILTER = "ClearFilter";
+        public const string REFRESH_VIEW = "RefreshView";
 
         IEnumerable<AzureObjectBase>? m_lstAzureObjectsBase;
         public IEnumerable<AzureObjectBase>? AzureObjectsBase
@@ -119,6 +120,12 @@ namespace AzureTracker
                 FilterData();
                 OnPropertyChanged(CLEAR_FILTER);
             }
+        }
+
+        internal void RefreshView()
+        {
+            FilterData();
+            OnPropertyChanged(REFRESH_VIEW);
         }
     }
 }

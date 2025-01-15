@@ -92,33 +92,46 @@ namespace AzureTracker
                     if (type != null)
                     {
                         AzureObject ao = Enum.Parse<AzureObject>(type);
-                        var dicFilter = new Dictionary<string, string>();
-                        JsonArray? fields = jsonFilter?["fields"]?.AsArray();
-
-                        for (int j = 0; j < fields?.Count; ++j)
-                        {
-                            JsonObject? node = fields[j]?.AsObject();
-                            if (node != null)
-                            {
-                                IEnumerable<string> propertyNames = node.Select(p => p.Key);
-
-                                if (propertyNames != null)
-                                {
-                                    foreach (string sKey in propertyNames)
-                                    {
-                                        var field = fields[j]?[sKey]?.ToString();
-                                        if (field != null) dicFilter[sKey] = field;
-                                    }
-                                }
-                            }
-                        }
-                        AzureObjectVMDictionary[ao].ResetFilter(dicFilter);
+                        ResetFilterByJsonFilter(ao, jsonFilter);
                     }
                 }
             }
             catch (Exception ex)
             {
                 Logger.Instance.Error(ex.Message);
+            }
+        }
+
+        private void ResetFilterByJsonFilter(AzureObject ao, JsonNode? jsonFilter)
+        {
+            var dicFilter = new Dictionary<string, string>();
+            JsonArray? fields = jsonFilter?["fields"]?.AsArray();
+            ResetFilterByType(dicFilter, ao, fields);
+        }
+
+        private void ResetFilterByType(Dictionary<string, string> dicFilter, AzureObject ao, JsonArray? fields)
+        {
+            for (int j = 0; j < fields?.Count; ++j)
+            {
+                JsonObject? node = fields[j]?.AsObject();
+                ResetFieldrByType(dicFilter, ao, node);
+            }
+            AzureObjectVMDictionary[ao].ResetFilter(dicFilter);
+        }
+        private void ResetFieldrByType(Dictionary<string, string> dicFilter, AzureObject ao, JsonObject? node)
+        {
+            if (node != null)
+            {
+                IEnumerable<string> propertyNames = node.Select(p => p.Key);
+
+                if (propertyNames != null)
+                {
+                    foreach (string sKey in propertyNames)
+                    {
+                        var field = node?[sKey]?.ToString();
+                        if (field != null) dicFilter[sKey] = field;
+                    }
+                }
             }
         }
 
@@ -195,6 +208,39 @@ namespace AzureTracker
         private void ClearFilter()
         {
             AzureObjectVMDictionary[SelectedAzureObject].ClearFilter();
+        }
+
+        ICommand? m_cmdResetFilter = null;
+        public ICommand CmdResetFilter
+        {
+            get
+            {
+                if (m_cmdResetFilter == null)
+                {
+                    m_cmdResetFilter = new CommandHandler(
+                        new Action(ResetFilter));
+                }
+                return m_cmdResetFilter;
+            }
+        }
+
+        private void ResetFilter()
+        {
+            for (int i = 0; i < m_jsonDefaultFilters?.Count; ++i)
+            {
+                JsonNode? jsonFilter = m_jsonDefaultFilters[i];
+                var type = jsonFilter?["type"]?.ToString();
+                if (type != null)
+                {
+                    AzureObject ao = Enum.Parse<AzureObject>(type);
+
+                    if (ao == SelectedAzureObject)
+                    {
+                        ResetFilterByJsonFilter(ao, jsonFilter);
+                        AzureObjectVMDictionary[ao].RefreshView();
+                    }
+                }
+            }
         }
 
         private void ShowAboutWindow()

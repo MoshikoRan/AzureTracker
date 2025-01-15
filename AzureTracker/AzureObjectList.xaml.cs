@@ -8,6 +8,7 @@ using System.Windows.Input;
 using System.Windows.Threading;
 using System.Linq;
 using System.Collections.Generic;
+using System.Windows.Media;
 
 namespace AzureTracker
 {
@@ -41,6 +42,30 @@ namespace AzureTracker
             {
                 GenerateGridViewColumns();
             }
+            else if (e.PropertyName == AzureObjectListViewModel.REFRESH_VIEW)
+            {
+                var lstCtrl = AllChildren(lv).Where(c => c?.Name == "txtFilter");
+                foreach (var ctrl in lstCtrl)
+                {
+                    if (ctrl != null)
+                        GVColFilter_Loaded(ctrl, new RoutedEventArgs());
+                }
+            }
+        }
+        private List<Control?> AllChildren(DependencyObject parent)
+        {
+            var list = new List<Control?>();
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+            {
+                var child = VisualTreeHelper.GetChild(parent, i);
+                if (child is Control)
+                {
+                    var ctrl = child as Control;
+                    list.Add(ctrl);
+                }
+                list.AddRange(AllChildren(child));
+            }
+            return list;
         }
 
         private void GenerateGridViewColumns()
