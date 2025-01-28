@@ -61,7 +61,7 @@ namespace AzureTracker.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("xgxmnw5bo5ouph7mqbwn7rgnmak5lvsxn4lsoke6c7qoyurncrka")]
+        [global::System.Configuration.DefaultSettingValueAttribute("1234567890")]
         public string PAT {
             get {
                 return ((string)(this["PAT"]));
@@ -99,7 +99,7 @@ namespace AzureTracker.Properties {
                   ""type"": ""Build"",
                   ""fields"": [
                   {
-                  ""RepoName"": ""ServiceUtility_git;FFRAngio_AlgoMatlab;FFRAngio_Application""
+                  ""RepoName"": ""Repo1;Repo2;Repo3""
                   }
                   ]
                   }
@@ -111,6 +111,36 @@ namespace AzureTracker.Properties {
             }
             set {
                 this["DefaultFilters"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute(@"Copyright © 2025 Moshe Ran
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.")]
+        public string LicenseText {
+            get {
+                return ((string)(this["LicenseText"]));
+            }
+            set {
+                this["LicenseText"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("https://opensource.org/license/mit")]
+        public string LicenseLink {
+            get {
+                return ((string)(this["LicenseLink"]));
+            }
+            set {
+                this["LicenseLink"] = value;
             }
         }
     }
