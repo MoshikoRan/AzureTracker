@@ -1,5 +1,6 @@
 ﻿using AzureTracker.Properties;
 using CefSharp;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -9,6 +10,8 @@ using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using static AzureTracker.AzureProvider;
+using static Microsoft.Azure.Pipelines.WebApi.PipelinesResources;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace AzureTracker
 {
@@ -439,16 +442,14 @@ namespace AzureTracker
             return true;
         }
 
+        readonly string DownloadsFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),"downloads");
         public bool OnBeforeDownload(IWebBrowser chromiumWebBrowser, IBrowser browser, DownloadItem downloadItem, IBeforeDownloadCallback callback)
         {
             if (!callback.IsDisposed)
             {
                 using (callback)
                 {
-                    string sPath = Path.Combine(
-                            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-                            "downloads",
-                            downloadItem.SuggestedFileName);
+                    string sPath = Path.Combine(DownloadsFolder, downloadItem.SuggestedFileName);
                     callback.Continue(
                         sPath,
                         showDialog: false);
@@ -460,8 +461,109 @@ namespace AzureTracker
 
         public void OnDownloadUpdated(IWebBrowser chromiumWebBrowser, IBrowser browser, DownloadItem downloadItem, IDownloadItemCallback callback)
         {
-            Logger.Instance.Info($"OnDownloadUpdated...");
+            if (downloadItem.IsComplete)
+            {
+                Logger.Instance.Info($"Download of {downloadItem.FullPath} completed.");
+                try
+                {
+                    var progs = GetRecommendedPrograms(Path.GetExtension(downloadItem.FullPath));
+                    var count = 0;
+                    foreach (var prog in progs)
+                    {
+                        try
+                        {
+                            Process.Start(
+                                new ProcessStartInfo
+                                {
+                                    FileName = prog,
+                                    Arguments = downloadItem.FullPath
+                                });
+                            browser?.CloseBrowser(true);
+                            return;
+                        }
+                        catch (Exception e)
+                        {
+                            count++;
+                            Logger.Instance.Error($"could not open using {prog}");
+                        } 
+                    }
+
+                    if (count == 0 || count == progs.Count())
+                    {
+                        // did not find a program to open the file, try in browser
+                        browser?.MainFrame?.LoadUrl(downloadItem.FullPath);
+                    }
+                }
+                catch (Exception e)
+                {
+                    Logger.Instance.Error(e.Message);
+                    browser?.MainFrame?.LoadUrl(DownloadsFolder);
+                    //browser?.CloseBrowser(true);
+                }
+            }
         }
+
+        #region utilities
+        public IEnumerable<string> GetRecommendedPrograms(string ext)
+        {
+            //Search programs names:
+            List<string> progs = GetProgs(ext);
+            if (progs.Count == 0)
+                return progs;
+
+            //Search paths:
+            List<string> progPaths = GetProgPaths(progs);
+            return progPaths;
+        }
+
+        const string FileExt = @"Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\";
+        private List<string> GetProgs(string ext)
+        {
+            List<string> progs = new List<string>();
+            string baseKey = FileExt + ext;
+
+            using (RegistryKey? rkey = Registry.CurrentUser?.OpenSubKey(baseKey + @"\OpenWithList"))
+            {
+                if (rkey != null)
+                {
+                    string? mruList = (string?)rkey.GetValue("MRUList");
+                    if (mruList != null)
+                    {
+                        foreach (char c in mruList)
+                        {
+                            string? s = (string?)rkey.GetValue(c.ToString());
+                            if (s != null && s.ToLower().Contains(".exe"))
+                                progs.Add(s);
+                        }
+                    }
+                }
+            }
+            return progs;
+        }
+
+        private List<string> GetProgPaths(List<string> progs)
+        {
+            List<string> progPaths = new List<string>();
+            const string baseKey = @"Software\Classes\Applications\{0}\shell\open\command";
+
+            foreach (string prog in progs)
+            {
+                using (RegistryKey? rkey = Registry.CurrentUser?.OpenSubKey(string.Format(baseKey, prog)))
+                {
+                    if (rkey != null)
+                    {
+                        string? s = (string?)rkey.GetValue("");
+                        if (s != null)
+                        {
+                            //remove quotes
+                            progPaths.Add(s.Substring(1, s.IndexOf("\"", 2) - 1));
+                        }
+                    }
+                }
+            }
+            return progPaths;
+        }
+        #endregion
     }
 
     internal class CommandHandler : ICommand
