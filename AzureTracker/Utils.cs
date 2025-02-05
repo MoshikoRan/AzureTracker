@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
+using System.Runtime.InteropServices;
 using System.Windows.Input;
 
 namespace AzureTracker.Utils
@@ -17,6 +19,68 @@ namespace AzureTracker.Utils
 
             //Search paths:
             List<string> progPaths = GetProgPaths(progs);
+
+            if (progPaths.Count == 0)
+            {
+                //Search paths program files
+                progPaths = GetProgPathsFromProgramFiles(progs);
+            }
+
+            if (progPaths.Count == 0)
+            {
+                //Search paths system folder
+                progPaths = GetProgPathsFromSystem(progs);
+            }
+            return progPaths;
+        }
+
+        private static List<string> GetProgPathsFromSystem(List<string> progs)
+        {
+            List<string> progPaths = GetProgPathFromFolder(progs, Environment.GetFolderPath(Environment.SpecialFolder.System), false);
+
+            if (progPaths.Count == 0)
+            {
+                progPaths = GetProgPathFromFolder(progs, Environment.GetFolderPath(Environment.SpecialFolder.SystemX86), false);
+            }
+
+            return progPaths;
+        }
+
+        private static List<string> GetProgPathsFromProgramFiles(List<string> progs)
+        {
+            List<string> progPaths = GetProgPathFromFolder(progs,Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles));
+
+            if (progPaths.Count == 0)
+            {
+                progPaths = GetProgPathFromFolder(progs, Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86));
+            }
+
+            return progPaths;
+        }
+
+        private static List<string> GetProgPathFromFolder(List<string> progs, string folder, bool bRecursive = true)
+        {
+            List<string> progPaths = new List<string>();
+
+            foreach (string prog in progs)
+            {
+                foreach (string dir in Directory.GetDirectories(folder))
+                {
+                    try
+                    {
+                        var files = Directory.GetFiles(dir, prog, bRecursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
+                        if (files.Length > 0)
+                        {
+                            progPaths.Add(files[0].ToString());
+                            break;
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Instance.Error(e.Message);
+                    }
+                }
+            }
             return progPaths;
         }
 
@@ -84,6 +148,11 @@ namespace AzureTracker.Utils
                 Logger.Instance.Error(e.Message);
             }
         }
+
+        [DllImport("user32.dll")]
+        public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+        public const int SW_HIDE = 0;
+        public const int SW_SHOW = 5;
     }
 
     internal class CommandHandler : ICommand

@@ -13,7 +13,7 @@ using static AzureTracker.AzureProvider;
 
 namespace AzureTracker
 {
-    public class MainViewModel : ViewModelBase
+    public class MainViewModel : ViewModelBase, IDownloadHandlerOwner
     {
         public Dictionary<AzureObject, AzureObjectListViewModel> AzureObjectVMDictionary { get; private set; } =
             new Dictionary<AzureObject, AzureObjectListViewModel>();
@@ -408,22 +408,53 @@ namespace AzureTracker
             }
         }
 
-        IDownloadHandler m_downloadHandler = new DownloadHandler();
-        public IDownloadHandler ChromeDownloadHandler
+        public void OnBeforeDownload(IWebBrowser chromiumWebBrowser, IBrowser browser, DownloadItem downloadItem)
         {
-            get { return m_downloadHandler; }
+            EnableSelection = false;
         }
 
+        public void OnDownloadCompleted(IWebBrowser chromiumWebBrowser, IBrowser browser, DownloadItem downloadItem, bool bSuccess)
+        {
+            if (bSuccess)
+            {
+                browser.CloseBrowser(true);
+            }
+            else
+            {
+                Helpers.ShowWindow(browser.GetHost().GetWindowHandle(), Helpers.SW_SHOW);
+                // did not find a program to open the file, try in browser
+                browser?.MainFrame?.LoadUrl(DownloadHandler.DownloadsFolder);
+            }
+            EnableSelection = true;
+        }
+
+        IDownloadHandler? m_downloadHandler = null;
+        public IDownloadHandler ChromeDownloadHandler
+        {
+            get 
+            { 
+                if (m_downloadHandler == null)
+                {
+                    m_downloadHandler = new DownloadHandler(this);
+                }
+                return m_downloadHandler; 
+            }
+        }
     }
 
     internal class DownloadHandler : IDownloadHandler
     {
+        IDownloadHandlerOwner? m_owner = null;
+        public DownloadHandler(IDownloadHandlerOwner owner)
+        {
+            m_owner = owner;
+        }
         public bool CanDownload(IWebBrowser chromiumWebBrowser, IBrowser browser, string url, string requestMethod)
         {
             return true;
         }
 
-        readonly string DownloadsFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),"downloads");
+        public static string DownloadsFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),"downloads");
         public bool OnBeforeDownload(IWebBrowser chromiumWebBrowser, IBrowser browser, DownloadItem downloadItem, IBeforeDownloadCallback callback)
         {
             if (!callback.IsDisposed)
@@ -435,6 +466,7 @@ namespace AzureTracker
                         sPath,
                         showDialog: false);
                     Logger.Instance.Info($"Downloding {sPath}");
+                    m_owner?.OnBeforeDownload(chromiumWebBrowser, browser, downloadItem);
                 }
             }
             return true;
@@ -444,44 +476,49 @@ namespace AzureTracker
         {
             if (downloadItem.IsComplete)
             {
+                bool bSuccess = false;
                 Logger.Instance.Info($"Download of {downloadItem.FullPath} completed.");
                 try
                 {
+                    Helpers.ShowWindow(browser.GetHost().GetWindowHandle(), Helpers.SW_HIDE);
                     var progs = Helpers.GetRecommendedPrograms(Path.GetExtension(downloadItem.FullPath));
+                    var fullPath = "\"" + downloadItem.FullPath + "\"";
                     var count = 0;
                     foreach (var prog in progs)
                     {
                         try
                         {
-                            Process.Start(
-                                new ProcessStartInfo
-                                {
-                                    FileName = prog,
-                                    Arguments = downloadItem.FullPath
-                                });
-                            browser?.CloseBrowser(true);
-                            return;
+                            var pi = new ProcessStartInfo
+                            {
+                                FileName = "\"" + prog + "\"",
+                                Arguments = fullPath,
+                                Verb = "runas"
+                            };
+                            Process.Start(pi);
+                            bSuccess = true;
                         }
-                        catch 
+                        catch (Exception e)
                         {
                             count++;
-                            Logger.Instance.Error($"could not open using {prog}");
+                            Logger.Instance.Error($"could not open using {prog}\n{e.Message}");
                         } 
-                    }
-
-                    if (count == 0 || count == progs.Count())
-                    {
-                        // did not find a program to open the file, try in browser
-                        browser?.MainFrame?.LoadUrl(downloadItem.FullPath);
                     }
                 }
                 catch (Exception e)
                 {
                     Logger.Instance.Error(e.Message);
-                    browser?.MainFrame?.LoadUrl(DownloadsFolder);
-                    //browser?.CloseBrowser(true);
+                }
+                finally
+                {
+                    m_owner?.OnDownloadCompleted(chromiumWebBrowser, browser, downloadItem, bSuccess);
                 }
             }
         }
+    }
+
+    public interface IDownloadHandlerOwner
+    {
+        void OnBeforeDownload(IWebBrowser chromiumWebBrowser, IBrowser browser, DownloadItem downloadItem);
+        void OnDownloadCompleted(IWebBrowser chromiumWebBrowser, IBrowser browser, DownloadItem downloadItem, bool bSuccess);
     }
 }
