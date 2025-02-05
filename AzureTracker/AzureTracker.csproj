@@ -7,7 +7,12 @@
     <UseWPF>true</UseWPF>
     <BaseOutputPath>Q:\AzureTracker</BaseOutputPath>
     <ApplicationIcon>2jEEID-LogoMakr.ico</ApplicationIcon>
+    <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="app.manifest" />
+  </ItemGroup>
 
   <ItemGroup>
     <Content Include="2jEEID-LogoMakr.ico" />
@@ -27,6 +32,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Properties\app.manifest">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
     <None Update="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
