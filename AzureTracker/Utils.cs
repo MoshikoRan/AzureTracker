@@ -64,7 +64,8 @@ namespace AzureTracker.Utils
 
             foreach (string prog in progs)
             {
-                foreach (string dir in Directory.GetDirectories(folder))
+                foreach (string dir in 
+                    bRecursive ? Directory.GetDirectories(folder) : new string[] { folder} )
                 {
                     try
                     {
