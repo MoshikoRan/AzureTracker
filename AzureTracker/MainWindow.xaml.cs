@@ -128,7 +128,7 @@ namespace AzureTracker
                 header.TextDecorations.Add(TextDecorations.Underline);
                 header.Foreground = System.Windows.Media.Brushes.Blue;
                 header.Text = GetTabHeader(aob);
-                found.MouseLeftButtonUp += Tab_MouseLeftButtonUp;
+                found.MouseLeftButtonDown += Tab_MouseLeftButtonDown;
                 found.Header = header;
                 found.Content = chromeTab;
                 found.Uri = uri;
@@ -163,6 +163,7 @@ namespace AzureTracker
                 found.ContextMenu.Items.Add(menuItemClose);
                 found.ContextMenu.Items.Add(menuItemCloseAll);
                 found.ContextMenu.Items.Add(menuItemCloseAllButThis);
+
                 ChromeTabCtrl.Items.Add(found);
             }
 
@@ -204,9 +205,9 @@ namespace AzureTracker
             }
         }
 
-        private void Tab_MouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void Tab_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
-            if (e.ClickCount == 1)
+            if (e.ClickCount == 1 && ChromeTabCtrl.SelectedItem == sender)
             {
                 WebTabItem? found = sender as WebTabItem;
                 if (found != null)
@@ -236,7 +237,7 @@ namespace AzureTracker
                 {
                     foreach (TabItem item in ChromeTabCtrl.Items)
                     {
-                        item.MouseDoubleClick -= Tab_MouseLeftButtonUp;
+                        item.MouseLeftButtonDown -= Tab_MouseLeftButtonDown;
                     }
                     ChromeTabCtrl.Items.Clear();
                 }
