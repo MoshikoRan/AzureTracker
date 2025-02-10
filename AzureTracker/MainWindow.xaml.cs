@@ -1,4 +1,6 @@
-﻿using CefSharp.Wpf;
+﻿using CefSharp;
+using CefSharp.Wpf;
+using CefSharp.Wpf.Handler;
 using System;
 using System.Windows;
 using System.Windows.Controls;
@@ -120,54 +122,64 @@ namespace AzureTracker
             WebTabItem? found = GetWebTabItemByUri(uri);
             if (found == null)
             {
-                var chromeTab = new ChromiumWebBrowser(uri);
-                var vm = DataContext as MainViewModel;
-                chromeTab.DownloadHandler = vm?.ChromeDownloadHandler;
-                found = new WebTabItem();
-                TextBlock header = new TextBlock();
-                header.TextDecorations.Add(TextDecorations.Underline);
-                header.Foreground = System.Windows.Media.Brushes.Blue;
-                header.Text = GetTabHeader(aob);
-                found.MouseLeftButtonDown += Tab_MouseLeftButtonDown;
-                found.Header = header;
-                found.Content = chromeTab;
-                found.Uri = uri;
-                found.ToolTip = uri;
-
-                //copy uri
-                var menuItem = new MenuItem();
-                menuItem.Header = "Copy Uri";
-                menuItem.Tag = uri;
-                menuItem.Click += CopyUri_Click;
-
-                //close currnt tab
-                var menuItemClose = new MenuItem();
-                menuItemClose.Header = "Close";
-                menuItemClose.Tag = found;
-                menuItemClose.Click += Close_Click;
-
-                //close all tabs
-                var menuItemCloseAll = new MenuItem();
-                menuItemCloseAll.Header = "Close all tabs";
-                menuItemCloseAll.Tag = found;
-                menuItemCloseAll.Click += CloseAllTabs;
-
-                //close all tabs but current
-                var menuItemCloseAllButThis = new MenuItem();
-                menuItemCloseAllButThis.Header = "Close all tabs but this";
-                menuItemCloseAllButThis.Tag = found;
-                menuItemCloseAllButThis.Click += CloseAllTabsButThis;
-
-                found.ContextMenu = new ContextMenu();
-                found.ContextMenu.Items.Add(menuItem);
-                found.ContextMenu.Items.Add(menuItemClose);
-                found.ContextMenu.Items.Add(menuItemCloseAll);
-                found.ContextMenu.Items.Add(menuItemCloseAllButThis);
-
+                found = CreatNewTab(uri, GetTabHeader(aob));
                 ChromeTabCtrl.Items.Add(found);
             }
 
             ChromeTabCtrl.SelectedItem = found;
+        }
+
+        private WebTabItem CreatNewTab(string? uri, string header)
+        {
+            var chromeTab = new ChromiumWebBrowser(uri);
+            var menuItemOpenNewTab = new MenuItem();
+            var menuHandler = new ChromeTabMenuHandler();
+            chromeTab.MenuHandler = menuHandler;
+
+            var vm = DataContext as MainViewModel;
+            chromeTab.DownloadHandler = vm?.ChromeDownloadHandler;
+            var found = new WebTabItem();
+            TextBlock headerTB = new TextBlock();
+            headerTB.TextDecorations.Add(TextDecorations.Underline);
+            headerTB.Foreground = System.Windows.Media.Brushes.Blue;
+            headerTB.Text = header;
+            found.MouseLeftButtonDown += Tab_MouseLeftButtonDown;
+            found.Header = headerTB;
+            found.Content = chromeTab;
+            found.Uri = uri;
+            found.ToolTip = uri;
+
+            //copy uri
+            var menuItemCopy = new MenuItem();
+            menuItemCopy.Header = "Copy Uri";
+            menuItemCopy.Tag = uri;
+            menuItemCopy.Click += CopyUri_Click;
+
+            //close currnt tab
+            var menuItemClose = new MenuItem();
+            menuItemClose.Header = "Close";
+            menuItemClose.Tag = found;
+            menuItemClose.Click += Close_Click;
+
+            //close all tabs
+            var menuItemCloseAll = new MenuItem();
+            menuItemCloseAll.Header = "Close all tabs";
+            menuItemCloseAll.Tag = found;
+            menuItemCloseAll.Click += CloseAllTabs;
+
+            //close all tabs but current
+            var menuItemCloseAllButThis = new MenuItem();
+            menuItemCloseAllButThis.Header = "Close all tabs but this";
+            menuItemCloseAllButThis.Tag = found;
+            menuItemCloseAllButThis.Click += CloseAllTabsButThis;
+
+            found.ContextMenu = new ContextMenu();
+            found.ContextMenu.Items.Add(menuItemCopy);
+            found.ContextMenu.Items.Add(menuItemClose);
+            found.ContextMenu.Items.Add(menuItemCloseAll);
+            found.ContextMenu.Items.Add(menuItemCloseAllButThis);
+
+            return found;
         }
 
         private void CloseAllTabsButThis(object sender, RoutedEventArgs e)
@@ -179,6 +191,10 @@ namespace AzureTracker
                 if (mi!= null && item == mi.Tag)
                 {
                     found = item; break;
+                }
+                else
+                {
+                    ReleaseTab(item);
                 }
             }
 
@@ -193,6 +209,10 @@ namespace AzureTracker
 
         private void CloseAllTabs(object sender, RoutedEventArgs e)
         {
+            foreach (TabItem item in ChromeTabCtrl.Items)
+            {
+                ReleaseTab(item);
+            }
             ChromeTabCtrl.Items.Clear();
         }
 
@@ -224,28 +244,25 @@ namespace AzureTracker
             var menuItem = sender as MenuItem;
             if (menuItem != null)
             {
-                ChromeTabCtrl.Items.Remove(menuItem.Tag);
+                var item = menuItem.Tag as TabItem;
+                if (item != null)
+                {
+                    ReleaseTab(item);
+                    ChromeTabCtrl.Items.Remove(menuItem.Tag);
+                }
             }
         }
 
-        private void ClearCloseButton_Click(object sender, RoutedEventArgs e)
+        private void ReleaseTab(TabItem item)
         {
-            var vm = DataContext as MainViewModel;
-            if (vm != null)
+            item.MouseLeftButtonDown -= Tab_MouseLeftButtonDown;
+            var chrome = item.Content as ChromiumWebBrowser;
+            if (chrome != null)
             {
-                if (vm.DisplayWebView)
-                {
-                    foreach (TabItem item in ChromeTabCtrl.Items)
-                    {
-                        item.MouseLeftButtonDown -= Tab_MouseLeftButtonDown;
-                    }
-                    ChromeTabCtrl.Items.Clear();
-                }
-                else
-                {
-                    vm.ClearLog();
-                }
+                var menuHandler = chrome.MenuHandler as ChromeTabMenuHandler;
+                chrome.MenuHandler = null;
             }
+            item.Content = null;
         }
 
         private void ResetView_Click(object sender, RoutedEventArgs e)
@@ -271,5 +288,18 @@ namespace AzureTracker
             m_logWindow.Content = logTxt;
             m_logWindow.Show();
         }
+    }
+}
+
+internal class ChromeTabMenuHandler : ContextMenuHandler
+{
+    public ChromeTabMenuHandler():base()
+    {
+    }
+
+    protected override void OnBeforeContextMenu(IWebBrowser chromiumWebBrowser, IBrowser browser, IFrame frame, IContextMenuParams parameters, IMenuModel model)
+    {
+        model.Remove(CefMenuCommand.ViewSource);
+        model.Remove(CefMenuCommand.Print);
     }
 }
