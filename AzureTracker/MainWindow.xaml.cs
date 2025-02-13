@@ -301,5 +301,18 @@ internal class ChromeTabMenuHandler : ContextMenuHandler
     {
         model.Remove(CefMenuCommand.ViewSource);
         model.Remove(CefMenuCommand.Print);
+        model.AddItem(CefMenuCommand.CustomFirst, "Copy Url");
+    }
+
+    protected override void ExecuteCommand(IBrowser browser, ContextMenuExecuteModel model)
+    {
+        if (model.MenuCommand == CefMenuCommand.CustomFirst) //copy url
+        {
+            Clipboard.SetText(browser.MainFrame.Url);
+        }
+        else
+        {
+            base.ExecuteCommand(browser, model);
+        }
     }
 }
