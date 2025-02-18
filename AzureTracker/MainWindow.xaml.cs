@@ -1,4 +1,5 @@
-﻿using CefSharp;
+﻿using AzureTracker.Utils;
+using CefSharp;
 using CefSharp.Wpf;
 using CefSharp.Wpf.Handler;
 using System;
@@ -151,9 +152,15 @@ namespace AzureTracker
 
             //copy uri
             var menuItemCopy = new MenuItem();
-            menuItemCopy.Header = "Copy Uri";
+            menuItemCopy.Header = "Copy Url";
             menuItemCopy.Tag = uri;
             menuItemCopy.Click += CopyUri_Click;
+
+            //copy uri
+            var menuItemOpenChrome = new MenuItem();
+            menuItemOpenChrome.Header = "Open Chrome";
+            menuItemOpenChrome.Tag = uri;
+            menuItemOpenChrome.Click += MenuItemOpenChrome_Click;
 
             //close currnt tab
             var menuItemClose = new MenuItem();
@@ -175,11 +182,25 @@ namespace AzureTracker
 
             found.ContextMenu = new ContextMenu();
             found.ContextMenu.Items.Add(menuItemCopy);
+            found.ContextMenu.Items.Add(menuItemOpenChrome);
             found.ContextMenu.Items.Add(menuItemClose);
             found.ContextMenu.Items.Add(menuItemCloseAll);
             found.ContextMenu.Items.Add(menuItemCloseAllButThis);
 
             return found;
+        }
+
+        private void MenuItemOpenChrome_Click(object sender, RoutedEventArgs e)
+        {
+            var menuItem = sender as MenuItem;
+            if (menuItem != null)
+            {
+                var url = menuItem.Tag.ToString();
+                if (!string.IsNullOrEmpty(url))
+                {
+                    Helpers.OpenChrome(new Uri(url));
+                }
+            }
         }
 
         private void CloseAllTabsButThis(object sender, RoutedEventArgs e)
@@ -302,6 +323,7 @@ internal class ChromeTabMenuHandler : ContextMenuHandler
         model.Remove(CefMenuCommand.ViewSource);
         model.Remove(CefMenuCommand.Print);
         model.AddItem(CefMenuCommand.CustomFirst, "Copy Url");
+        model.AddItem(CefMenuCommand.CustomFirst+1, "Open Chrome");
     }
 
     protected override void ExecuteCommand(IBrowser browser, ContextMenuExecuteModel model)
@@ -309,6 +331,10 @@ internal class ChromeTabMenuHandler : ContextMenuHandler
         if (model.MenuCommand == CefMenuCommand.CustomFirst) //copy url
         {
             Clipboard.SetText(browser.MainFrame.Url);
+        }
+        else if (model.MenuCommand == CefMenuCommand.CustomFirst + 1)
+        {
+            Helpers.OpenChrome(new Uri(browser.MainFrame.Url));
         }
         else
         {
