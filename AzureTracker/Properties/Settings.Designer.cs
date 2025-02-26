@@ -61,7 +61,7 @@ namespace AzureTracker.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("1234567890")]
+        [global::System.Configuration.DefaultSettingValueAttribute("xgxmnw5bo5ouph7mqbwn7rgnmak5lvsxn4lsoke6c7qoyurncrka")]
         public string PAT {
             get {
                 return ((string)(this["PAT"]));
@@ -99,7 +99,7 @@ namespace AzureTracker.Properties {
                   ""type"": ""Build"",
                   ""fields"": [
                   {
-                  ""RepoName"": ""Repo1;Repo2;Repo3""
+                  ""RepoName"": ""ServiceUtility_git;FFRAngio_AlgoMatlab;FFRAngio_Application""
                   }
                   ]
                   }

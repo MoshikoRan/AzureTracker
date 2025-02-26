@@ -12,7 +12,7 @@
       <Value Profile="(Default)">30</Value>
     </Setting>
     <Setting Name="PAT" Type="System.String" Scope="User">
-      <Value Profile="(Default)">1234567890</Value>
+      <Value Profile="(Default)">xgxmnw5bo5ouph7mqbwn7rgnmak5lvsxn4lsoke6c7qoyurncrka</Value>
     </Setting>
     <Setting Name="DefaultFilters" Type="System.String" Scope="User">
       <Value Profile="(Default)">
@@ -41,7 +41,7 @@
                   "type": "Build",
                   "fields": [
                   {
-                  "RepoName": "Repo1;Repo2;Repo3"
+                  "RepoName": "ServiceUtility_git;FFRAngio_AlgoMatlab;FFRAngio_Application"
                   }
                   ]
                   }
