@@ -2,63 +2,72 @@
 <SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="AzureTracker.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
-    <Setting Name="Organization" Type="System.String" Scope="User">
-      <Value Profile="(Default)">Cathworks</Value>
-    </Setting>
-    <Setting Name="WorkItemTypes" Type="System.String" Scope="User">
+    <Setting Name="WorkItemTypes" Type="System.String" Scope="Application">
       <Value Profile="(Default)">Bug;User Story;Task;Epic;Feature</Value>
     </Setting>
-    <Setting Name="BuildNotOlderThanDays" Type="System.Double" Scope="User">
+    <Setting Name="BuildNotOlderThanDays" Type="System.Double" Scope="Application">
       <Value Profile="(Default)">30</Value>
     </Setting>
-    <Setting Name="PAT" Type="System.String" Scope="User">
-      <Value Profile="(Default)">xgxmnw5bo5ouph7mqbwn7rgnmak5lvsxn4lsoke6c7qoyurncrka</Value>
-    </Setting>
-    <Setting Name="DefaultFilters" Type="System.String" Scope="User">
-      <Value Profile="(Default)">
-                  {
-                  "defaultfilters": [
-                  {
-                  "type": "WorkItem",
-                  "fields": [
-                  {
-                  "Status": "Active;New;Ready"
-                  }
-                  ]
-                  },
-                  {
-                  "type": "PR",
-                  "fields": [
-                  {
-                  "IsDraft": "false"
-                  },
-                  {
-                  "Status": "Active"
-                  }
-                  ]
-                  },
-                  {
-                  "type": "Build",
-                  "fields": [
-                  {
-                  "RepoName": "ServiceUtility_git;FFRAngio_AlgoMatlab;FFRAngio_Application"
-                  }
-                  ]
-                  }
-                  ]
-                  }</Value>
-    </Setting>
-    <Setting Name="LicenseText" Type="System.String" Scope="User">
-      <Value Profile="(Default)">Copyright © 2025 Moshe Ran
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</Value>
-    </Setting>
-    <Setting Name="LicenseLink" Type="System.String" Scope="User">
+    <Setting Name="LicenseLink" Type="System.String" Scope="Application">
       <Value Profile="(Default)">https://opensource.org/license/mit</Value>
+    </Setting>
+    <Setting Name="Organization" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">YourAzureOrganizaionName</Value>
+    </Setting>
+    <Setting Name="PAT" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">YourPAT</Value>
+    </Setting>
+    <Setting Name="DefaultFilters" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">
+          {
+          "defaultfilters": [
+          {
+          "type": "WorkItem",
+          "fields": [
+          {
+          "Status": "Active;New;Ready"
+          }
+          ]
+          },
+          {
+          "type": "PR",
+          "fields": [
+          {
+          "IsDraft": "false"
+          },
+          {
+          "Status": "Active"
+          }
+          ]
+          },
+          {
+          "type": "Build",
+          "fields": [
+          {
+          "RepoName": "repo1;repo2;repo3"
+          }
+          ]
+          }
+          ]
+          }
+        </Value>
+    </Setting>
+    <Setting Name="LicenseText" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">
+          Copyright © 2025 Moshe Ran
+
+          Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+          The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+          THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+        </Value>
+    </Setting>
+    <Setting Name="MaxBuildsPerDefinition" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">100</Value>
+    </Setting>
+    <Setting Name="UseCaching" Type="System.Boolean" Scope="Application">
+      <Value Profile="(Default)">True</Value>
     </Setting>
   </Settings>
 </SettingsFile>
