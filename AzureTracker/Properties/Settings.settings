@@ -14,9 +14,6 @@
     <Setting Name="Organization" Type="System.String" Scope="Application">
       <Value Profile="(Default)">cathworks</Value>
     </Setting>
-    <Setting Name="PAT" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">5bx1fctpInbww1BXMCSzTBzCOeQPq5LAAqYeB3pLPMpV62GReC5tJQQJ99BBACAAAAA19tYxAAASAZDO1acY</Value>
-    </Setting>
     <Setting Name="DefaultFilters" Type="System.String" Scope="Application">
       <Value Profile="(Default)">
           {
@@ -68,6 +65,9 @@
     </Setting>
     <Setting Name="UseCaching" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="PAT" Type="System.String" Scope="Application">
+      <Value Profile="(Default)" />
     </Setting>
   </Settings>
 </SettingsFile>

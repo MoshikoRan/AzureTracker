@@ -61,16 +61,6 @@ namespace AzureTracker.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("5bx1fctpInbww1BXMCSzTBzCOeQPq5LAAqYeB3pLPMpV62GReC5tJQQJ99BBACAAAAA19tYxAAASAZDO1" +
-            "acY")]
-        public string PAT {
-            get {
-                return ((string)(this["PAT"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute(@"
           {
           ""defaultfilters"": [
@@ -142,6 +132,15 @@ namespace AzureTracker.Properties {
         public bool UseCaching {
             get {
                 return ((bool)(this["UseCaching"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string PAT {
+            get {
+                return ((string)(this["PAT"]));
             }
         }
     }
