@@ -65,7 +65,7 @@ namespace AzureTracker
 
         private void Hyperlink_RequestNavigate(object sender, System.Windows.Navigation.RequestNavigateEventArgs e)
         {
-            Helpers.OpenChrome(e.Uri);
+            Helpers.OpenSystemBrowser(e.Uri);
             e.Handled = true;
         }
     }

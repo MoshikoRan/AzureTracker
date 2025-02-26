@@ -198,7 +198,7 @@ namespace AzureTracker
                 var url = menuItem.Tag.ToString();
                 if (!string.IsNullOrEmpty(url))
                 {
-                    Helpers.OpenChrome(new Uri(url));
+                    Helpers.OpenSystemBrowser(new Uri(url));
                 }
             }
         }
@@ -323,7 +323,7 @@ internal class ChromeTabMenuHandler : ContextMenuHandler
         model.Remove(CefMenuCommand.ViewSource);
         model.Remove(CefMenuCommand.Print);
         model.AddItem(CefMenuCommand.CustomFirst, "Copy Url");
-        model.AddItem(CefMenuCommand.CustomFirst+1, "Open Chrome");
+        model.AddItem(CefMenuCommand.CustomFirst+1, "Open System Browser");
     }
 
     protected override void ExecuteCommand(IBrowser browser, ContextMenuExecuteModel model)
@@ -334,7 +334,7 @@ internal class ChromeTabMenuHandler : ContextMenuHandler
         }
         else if (model.MenuCommand == CefMenuCommand.CustomFirst + 1)
         {
-            Helpers.OpenChrome(new Uri(browser.MainFrame.Url));
+            Helpers.OpenSystemBrowser(new Uri(browser.MainFrame.Url));
         }
         else
         {
