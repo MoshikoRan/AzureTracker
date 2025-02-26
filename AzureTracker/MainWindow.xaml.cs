@@ -158,7 +158,7 @@ namespace AzureTracker
 
             //copy uri
             var menuItemOpenChrome = new MenuItem();
-            menuItemOpenChrome.Header = "Open Chrome";
+            menuItemOpenChrome.Header = "Open System Browser";
             menuItemOpenChrome.Tag = uri;
             menuItemOpenChrome.Click += MenuItemOpenChrome_Click;
 
