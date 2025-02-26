@@ -306,6 +306,8 @@ namespace AzureTracker
             logTxt.IsReadOnly = true;
             logTxt.DataContext = DataContext;
             logTxt.SetBinding(TextBox.TextProperty, new Binding("LogBuffer") { Mode = BindingMode.OneWay });
+            logTxt.HorizontalScrollBarVisibility = ScrollBarVisibility.Visible;
+            logTxt.VerticalScrollBarVisibility = ScrollBarVisibility.Visible;
             m_logWindow.Content = logTxt;
             m_logWindow.Show();
         }
