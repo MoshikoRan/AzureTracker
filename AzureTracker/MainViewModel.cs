@@ -25,18 +25,25 @@ namespace AzureTracker
 
         public void Init()
         {
-            m_azureProvider = new AzureProvider(
-                new AzureProviderConfig
-                {
-                    Organization = Settings.Default.Organization,
-                    PAT = Settings.Default.PAT,
-                    WorkItemTypes = Settings.Default.WorkItemTypes.Split(";", StringSplitOptions.RemoveEmptyEntries),
-                    BuildNotOlderThanDays = Settings.Default.BuildNotOlderThanDays
-                });
-            m_azureProvider.DataFetchEvent += AzureProveiderDataFetchHandler;
+            try
+            {
+                m_azureProvider = new AzureProvider(
+                            new AzureProviderConfig
+                            {
+                                Organization = Settings.Default.Organization,
+                                PAT = Settings.Default.PAT,
+                                WorkItemTypes = Settings.Default.WorkItemTypes.Split(";", StringSplitOptions.RemoveEmptyEntries),
+                                BuildNotOlderThanDays = Settings.Default.BuildNotOlderThanDays
+                            });
+                m_azureProvider.DataFetchEvent += AzureProveiderDataFetchHandler;
 
-            ResetFilters();
-            Sync(AzureObject.None);
+                ResetFilters();
+                Sync(AzureObject.None);
+            }
+            catch (Exception ex)
+            {
+                SetErrorStatus(ex);
+            }
         }
 
         internal void UnInit()
@@ -271,7 +278,6 @@ namespace AzureTracker
                 {
                     m_sStatus = value;
                     OnPropertyChanged();
-                    Logger.Instance.Info(m_sStatus);
                 }
             }
         }
@@ -317,12 +323,16 @@ namespace AzureTracker
                     }
                     catch (Exception ex)
                     {
-                        Status = "Error!";
-                        Logger.Instance.Error(ex.Message);
+                        SetErrorStatus(ex);
                     }
                 });
         }
 
+        void SetErrorStatus(Exception e)
+        {
+            Logger.Instance.Error(e.Message);
+            Status = "Error! Click 'View Log' for more details.";
+        }
 
         public AzureObject SelectedAzureObject { get; set; } = AzureObject.None;
         private void Sync(AzureObject azureObject)
@@ -343,8 +353,7 @@ namespace AzureTracker
                     }
                     catch (Exception ex)
                     {
-                        Status = "Error!";
-                        Logger.Instance.Error(ex.Message);
+                        SetErrorStatus(ex);
                     }
                     finally
                     {

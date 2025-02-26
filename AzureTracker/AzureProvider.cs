@@ -121,7 +121,6 @@ namespace AzureTracker
                 }
                 m_witTypeSubQuery = " AND (" + m_witTypeSubQuery.Remove(m_witTypeSubQuery.Length - 4, 3) + ")";
             }
-
             Projects = GetProjectList();
         }
 
@@ -289,6 +288,7 @@ namespace AzureTracker
             List<Project?> lstProjects = new List<Project?>();
             string sResponse = string.Empty;
             string uri = $"{AzureEndPoint}/_apis/projects?{API_VERSION}";
+            Logger.Instance.Info($"GetProjectList from {AzureEndPoint}");
             if (AzureGetRequest(uri, out sResponse))
             {
                 JsonNode? json = JsonNode.Parse(sResponse);
