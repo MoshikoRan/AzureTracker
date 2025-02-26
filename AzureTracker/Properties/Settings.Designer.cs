@@ -52,7 +52,7 @@ namespace AzureTracker.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("YourAzureOrganizaionName")]
+        [global::System.Configuration.DefaultSettingValueAttribute("cathworks")]
         public string Organization {
             get {
                 return ((string)(this["Organization"]));
@@ -61,7 +61,8 @@ namespace AzureTracker.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("YourPAT")]
+        [global::System.Configuration.DefaultSettingValueAttribute("5bx1fctpInbww1BXMCSzTBzCOeQPq5LAAqYeB3pLPMpV62GReC5tJQQJ99BBACAAAAA19tYxAAASAZDO1" +
+            "acY")]
         public string PAT {
             get {
                 return ((string)(this["PAT"]));
@@ -96,7 +97,7 @@ namespace AzureTracker.Properties {
           ""type"": ""Build"",
           ""fields"": [
           {
-          ""RepoName"": ""repo1;repo2;repo3""
+          ""RepoName"": ""FFRAngio_Application;FFRAngio_AlgoMatlab;ServiceUtility_git""
           }
           ]
           }
@@ -129,9 +130,9 @@ namespace AzureTracker.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("100")]
-        public string MaxBuildsPerDefinition {
+        public int MaxBuildsPerDefinition {
             get {
-                return ((string)(this["MaxBuildsPerDefinition"]));
+                return ((int)(this["MaxBuildsPerDefinition"]));
             }
         }
         
