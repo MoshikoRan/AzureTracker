@@ -33,7 +33,9 @@ namespace AzureTracker
                                 Organization = Settings.Default.Organization,
                                 PAT = Settings.Default.PAT,
                                 WorkItemTypes = Settings.Default.WorkItemTypes.Split(";", StringSplitOptions.RemoveEmptyEntries),
-                                BuildNotOlderThanDays = Settings.Default.BuildNotOlderThanDays
+                                BuildNotOlderThanDays = Settings.Default.BuildNotOlderThanDays,
+                                MaxBuildsPerDefinition = Settings.Default.MaxBuildsPerDefinition,
+                                UseCaching = Settings.Default.UseCaching
                             });
                 m_azureProvider.DataFetchEvent += AzureProveiderDataFetchHandler;
 

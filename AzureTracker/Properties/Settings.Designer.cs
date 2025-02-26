@@ -129,9 +129,9 @@ namespace AzureTracker.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("100")]
-        public string MaxBuildsPerDefinition {
+        public int MaxBuildsPerDefinition {
             get {
-                return ((string)(this["MaxBuildsPerDefinition"]));
+                return ((int)(this["MaxBuildsPerDefinition"]));
             }
         }
         
