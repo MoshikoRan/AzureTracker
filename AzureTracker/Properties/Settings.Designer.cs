@@ -52,19 +52,10 @@ namespace AzureTracker.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("YourAzureOrganizaionName")]
+        [global::System.Configuration.DefaultSettingValueAttribute("cathworks")]
         public string Organization {
             get {
                 return ((string)(this["Organization"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("YourPAT")]
-        public string PAT {
-            get {
-                return ((string)(this["PAT"]));
             }
         }
         
@@ -96,7 +87,7 @@ namespace AzureTracker.Properties {
           ""type"": ""Build"",
           ""fields"": [
           {
-          ""RepoName"": ""repo1;repo2;repo3""
+          ""RepoName"": ""FFRAngio_Application;FFRAngio_AlgoMatlab;ServiceUtility_git""
           }
           ]
           }
@@ -141,6 +132,15 @@ namespace AzureTracker.Properties {
         public bool UseCaching {
             get {
                 return ((bool)(this["UseCaching"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string PAT {
+            get {
+                return ((string)(this["PAT"]));
             }
         }
     }

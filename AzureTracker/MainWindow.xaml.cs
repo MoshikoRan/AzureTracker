@@ -126,6 +126,11 @@ namespace AzureTracker
                 found = CreatNewTab(uri, GetTabHeader(aob));
                 ChromeTabCtrl.Items.Add(found);
             }
+            else
+            {
+                var tb = found.Header as TextBlock;
+                Logger.Instance.Info($"Switching to tab {tb?.Text}");
+            }
 
             ChromeTabCtrl.SelectedItem = found;
         }
@@ -144,6 +149,9 @@ namespace AzureTracker
             headerTB.TextDecorations.Add(TextDecorations.Underline);
             headerTB.Foreground = System.Windows.Media.Brushes.Blue;
             headerTB.Text = header;
+
+            Logger.Instance.Info($"Creating new tab {header}");
+
             found.MouseLeftButtonDown += Tab_MouseLeftButtonDown;
             found.Header = headerTB;
             found.Content = chromeTab;
@@ -198,7 +206,12 @@ namespace AzureTracker
                 var url = menuItem.Tag.ToString();
                 if (!string.IsNullOrEmpty(url))
                 {
+                    Logger.Instance.Info($"Opening system browser, link = {url}");
                     Helpers.OpenSystemBrowser(new Uri(url));
+                }
+                else
+                {
+                    Logger.Instance.Error("Can't open system browser, url is null or empty");
                 }
             }
         }
@@ -206,9 +219,11 @@ namespace AzureTracker
         private void CloseAllTabsButThis(object sender, RoutedEventArgs e)
         {
             TabItem? found = null;
+            var mi = sender as MenuItem;
+            var tb = (mi?.Tag as TabItem)?.Header as TextBlock;
+            Logger.Instance.Info($"Closing all tabs but {tb?.Text}");
             foreach (TabItem item in ChromeTabCtrl.Items)
             {
-                var mi = sender as MenuItem;
                 if (mi!= null && item == mi.Tag)
                 {
                     found = item; break;
@@ -230,6 +245,7 @@ namespace AzureTracker
 
         private void CloseAllTabs(object sender, RoutedEventArgs e)
         {
+            Logger.Instance.Info("Closing all tabs");
             foreach (TabItem item in ChromeTabCtrl.Items)
             {
                 ReleaseTab(item);
@@ -242,7 +258,9 @@ namespace AzureTracker
             var menuItem = sender as MenuItem;
             if (menuItem != null)
             {
-                Clipboard.SetText(menuItem.Tag.ToString());
+                var uri = menuItem.Tag.ToString();
+                Logger.Instance.Info($"Copy Uri {uri}");
+                Clipboard.SetText(uri);
             }
         }
 
@@ -268,6 +286,8 @@ namespace AzureTracker
                 var item = menuItem.Tag as TabItem;
                 if (item != null)
                 {
+                    var tb = item.Header as TextBlock;
+                    Logger.Instance.Info($"Closing tab. {tb?.Text}");
                     ReleaseTab(item);
                     ChromeTabCtrl.Items.Remove(menuItem.Tag);
                 }
@@ -310,6 +330,7 @@ namespace AzureTracker
             logTxt.VerticalScrollBarVisibility = ScrollBarVisibility.Visible;
             m_logWindow.Content = logTxt;
             m_logWindow.Show();
+            logTxt.ScrollToEnd();
         }
     }
 }

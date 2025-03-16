@@ -12,10 +12,7 @@
       <Value Profile="(Default)">https://opensource.org/license/mit</Value>
     </Setting>
     <Setting Name="Organization" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">YourAzureOrganizaionName</Value>
-    </Setting>
-    <Setting Name="PAT" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">YourPAT</Value>
+      <Value Profile="(Default)">cathworks</Value>
     </Setting>
     <Setting Name="DefaultFilters" Type="System.String" Scope="Application">
       <Value Profile="(Default)">
@@ -44,7 +41,7 @@
           "type": "Build",
           "fields": [
           {
-          "RepoName": "repo1;repo2;repo3"
+          "RepoName": "FFRAngio_Application;FFRAngio_AlgoMatlab;ServiceUtility_git"
           }
           ]
           }
@@ -68,6 +65,9 @@
     </Setting>
     <Setting Name="UseCaching" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="PAT" Type="System.String" Scope="Application">
+      <Value Profile="(Default)" />
     </Setting>
   </Settings>
 </SettingsFile>

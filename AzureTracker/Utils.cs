@@ -141,7 +141,6 @@ namespace AzureTracker.Utils
                 psi.FileName = GetSystemDefaultBrowser();
                 psi.Arguments = uri?.ToString();
                 Process.Start(psi);
-                Logger.Instance.Info($"opened link = {uri}");
             }
             catch (Exception e)
             {
