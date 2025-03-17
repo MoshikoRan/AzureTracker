@@ -1,0 +1,41 @@
+﻿<Window x:Class="AzureTracker.AzureSettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:AzureTracker"
+        mc:Ignorable="d"
+        Title="Azure Settings" Height="250" 
+        Width="1000" FontSize="20"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner">
+    <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch" >
+        <Grid Margin="20">
+            <Grid.RowDefinitions>
+                <RowDefinition MaxHeight="40"/>
+                <RowDefinition MaxHeight="20" />
+                <RowDefinition MaxHeight="40"/>
+                <RowDefinition MaxHeight="40" />
+                <RowDefinition MaxHeight="40" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="260" />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+            
+            <TextBlock Grid.Row="0">Organization Name: </TextBlock>
+            <TextBox Grid.Row="0" Grid.Column="1" MinWidth="300" Text="{Binding OrganizationName}" />
+
+            <TextBlock Grid.Row="2">Personal Access Token (PAT): </TextBlock>
+            <PasswordBox Grid.Row="2" Grid.Column="1" MinWidth="300" PasswordChar="*" PasswordChanged="PasswordChangedHandler" />
+
+            <TextBlock Grid.Row="3" Grid.ColumnSpan="2">           
+                <Hyperlink 
+                    NavigateUri="https://learn.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate"
+                    RequestNavigate="Hyperlink_RequestNavigate">How to use personal access tokens?
+                </Hyperlink>
+            </TextBlock>
+            <Button Grid.Row="4" Width="80" Grid.ColumnSpan="2" Content="Set" Click="Button_Click" />
+        </Grid>
+    </Grid>
+</Window>

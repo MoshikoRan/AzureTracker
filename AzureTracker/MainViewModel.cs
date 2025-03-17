@@ -3,6 +3,7 @@ using AzureTracker.Utils;
 using CefSharp;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -27,7 +28,9 @@ namespace AzureTracker
         {
             try
             {
-                m_azureProvider = new AzureProvider(
+                m_azureProvider = new AzureProvider();
+
+                var isInitialized = m_azureProvider.Init(
                             new AzureProviderConfig
                             {
                                 Organization = Settings.Default.Organization,
@@ -37,10 +40,19 @@ namespace AzureTracker
                                 MaxBuildsPerDefinition = Settings.Default.MaxBuildsPerDefinition,
                                 UseCaching = Settings.Default.UseCaching
                             });
-                m_azureProvider.DataFetchEvent += AzureProveiderDataFetchHandler;
 
-                ResetFilters();
-                Sync(AzureObject.None);
+                if (isInitialized)
+                {
+                    m_azureProvider.DataFetchEvent += AzureProveiderDataFetchHandler;
+
+                    ResetFilters();
+                    Sync(AzureObject.None);
+                }
+                else
+                {
+                    OpenSettingsDialog();
+                    Init();
+                }
             }
             catch (Exception ex)
             {
@@ -212,6 +224,36 @@ namespace AzureTracker
                         new Action(ClearFilter));
                 }
                 return m_cmdClearFilter;
+            }
+        }
+
+
+        ICommand? m_cmdSettings = null;
+        public ICommand CmdSettings
+        {
+            get
+            {
+                if (m_cmdSettings == null)
+                {
+                    m_cmdSettings = new CommandHandler(
+                        new Action(OpenSettingsDialog));
+                }
+                return m_cmdSettings;
+            }
+        }
+
+        private void OpenSettingsDialog()
+        {
+            var azureSettingsVM = new AzureSettingsVM(
+                Settings.Default.Organization,
+                Settings.Default.PAT);
+            var azureSettingsWindow = new AzureSettingsWindow(azureSettingsVM);
+            var res = azureSettingsWindow.ShowDialog();
+            if (res.HasValue && res.Value == true)
+            {
+                Settings.Default.Organization = azureSettingsVM.OrganizationName;
+                Settings.Default.PAT = azureSettingsVM.PAT;
+                Settings.Default.Save();
             }
         }
 

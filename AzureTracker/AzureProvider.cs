@@ -105,27 +105,37 @@ namespace AzureTracker
 
             public bool UseCaching = true;
         }
-        public AzureProvider(AzureProviderConfig apc)
-        {
-            if (apc.UseCaching)
-            {
-                LoadCahcedAzureItems();
-            }
-            m_APConfig = apc;
+        public AzureProvider() { }
 
-            if (m_APConfig.WorkItemTypes.Length > 0)
+        public bool Init(AzureProviderConfig apc)
+        {
+            bool res = true;
+            try
             {
-                foreach (var type in m_APConfig.WorkItemTypes)
+                if (apc.UseCaching)
                 {
-                    m_witTypeSubQuery += $"[System.WorkItemType] = '{type}' OR ";
+                    LoadCahcedAzureItems();
                 }
-                m_witTypeSubQuery = " AND (" + m_witTypeSubQuery.Remove(m_witTypeSubQuery.Length - 4, 3) + ")";
+                m_APConfig = apc;
+
+                if (m_APConfig.WorkItemTypes.Length > 0)
+                {
+                    foreach (var type in m_APConfig.WorkItemTypes)
+                    {
+                        m_witTypeSubQuery += $"[System.WorkItemType] = '{type}' OR ";
+                    }
+                    m_witTypeSubQuery = " AND (" + m_witTypeSubQuery.Remove(m_witTypeSubQuery.Length - 4, 3) + ")";
+                }
+                Projects = GetProjectList();
             }
-            Projects = GetProjectList();
+            catch(Exception e)
+            {
+                res = false;
+            }
+            return res;
         }
 
         private string m_witTypeSubQuery = string.Empty;
-        private AzureProvider() { }
 
         #region Cache
 
@@ -220,7 +230,7 @@ namespace AzureTracker
 
         #endregion
 
-        void SetClientAuth(HttpClient client)
+        static void SetClientAuth(HttpClient client, string PAT)
         {
             client.DefaultRequestHeaders.Accept.Add(
                 new MediaTypeWithQualityHeaderValue("application/json"));
@@ -228,7 +238,7 @@ namespace AzureTracker
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic",
                 Convert.ToBase64String(
                     System.Text.ASCIIEncoding.ASCII.GetBytes(
-                        string.Format("{0}:{1}", "", m_APConfig.PAT))));
+                        string.Format("{0}:{1}", "", PAT))));
         }
 
         class Project
@@ -396,7 +406,7 @@ namespace AzureTracker
             string sResponse = string.Empty;
             using (HttpClient client = new HttpClient())
             {
-                SetClientAuth(client);
+                SetClientAuth(client, m_APConfig.PAT);
                 while (true)
                 {
                     if (Aborting)
@@ -775,12 +785,13 @@ namespace AzureTracker
         }
 
         #endregion
-        private bool AzureGetRequest(string uri, out string response)
+
+        private bool AzureGetRequestWithPAT(string uri, string PAT, out string response)
         {
             bool success = false;
             using (HttpClient client = new HttpClient())
             {
-                SetClientAuth(client);
+                SetClientAuth(client, PAT);
 
                 var responseTask = client.GetAsync(uri);
 
@@ -789,6 +800,11 @@ namespace AzureTracker
             }
 
             return success;
+        }
+
+        private bool AzureGetRequest(string uri, out string response)
+        {
+            return AzureGetRequestWithPAT(uri, m_APConfig.PAT, out response);
         }
 
         long m_bIsSyncInProgress = 0;

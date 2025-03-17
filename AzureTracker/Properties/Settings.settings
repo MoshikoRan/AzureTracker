@@ -2,19 +2,16 @@
 <SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="AzureTracker.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
-    <Setting Name="WorkItemTypes" Type="System.String" Scope="Application">
+    <Setting Name="WorkItemTypes" Type="System.String" Scope="User">
       <Value Profile="(Default)">Bug;User Story;Task;Epic;Feature</Value>
     </Setting>
-    <Setting Name="BuildNotOlderThanDays" Type="System.Double" Scope="Application">
+    <Setting Name="BuildNotOlderThanDays" Type="System.Double" Scope="User">
       <Value Profile="(Default)">30</Value>
     </Setting>
-    <Setting Name="LicenseLink" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">https://opensource.org/license/mit</Value>
-    </Setting>
-    <Setting Name="Organization" Type="System.String" Scope="Application">
+    <Setting Name="Organization" Type="System.String" Scope="User">
       <Value Profile="(Default)">cathworks</Value>
     </Setting>
-    <Setting Name="DefaultFilters" Type="System.String" Scope="Application">
+    <Setting Name="DefaultFilters" Type="System.String" Scope="User">
       <Value Profile="(Default)">
           {
           "defaultfilters": [
@@ -49,24 +46,13 @@
           }
         </Value>
     </Setting>
-    <Setting Name="LicenseText" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">
-          Copyright © 2025 Moshe Ran
-
-          Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-          The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-          THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-        </Value>
-    </Setting>
-    <Setting Name="MaxBuildsPerDefinition" Type="System.Int32" Scope="Application">
+    <Setting Name="MaxBuildsPerDefinition" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">100</Value>
     </Setting>
-    <Setting Name="UseCaching" Type="System.Boolean" Scope="Application">
+    <Setting Name="UseCaching" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
-    <Setting Name="PAT" Type="System.String" Scope="Application">
+    <Setting Name="PAT" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
   </Settings>
