@@ -130,6 +130,7 @@ namespace AzureTracker
             }
             catch(Exception e)
             {
+                Logger.Instance.Error(e.Message);
                 res = false;
             }
             return res;

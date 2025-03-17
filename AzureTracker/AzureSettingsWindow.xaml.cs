@@ -27,7 +27,12 @@ namespace AzureTracker
 
         private void PasswordChangedHandler(object sender, RoutedEventArgs e)
         {
-           (this.DataContext as AzureSettingsVM).PAT = (sender as PasswordBox).Password;
+            var vm = this.DataContext as AzureSettingsVM;
+            var pBox = sender as PasswordBox;
+            if (vm != null && pBox != null)
+            {
+                vm.PAT = pBox.Password;
+            }
         }
     }
 }
