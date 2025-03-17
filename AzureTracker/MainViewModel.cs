@@ -24,13 +24,14 @@ namespace AzureTracker
             CreateVMDictionary();
         }
 
+        bool m_isInitialized = false;
         public void Init()
         {
             try
             {
                 m_azureProvider = new AzureProvider();
 
-                var isInitialized = m_azureProvider.Init(
+                m_isInitialized = m_azureProvider.Init(
                             new AzureProviderConfig
                             {
                                 Organization = Settings.Default.Organization,
@@ -41,7 +42,7 @@ namespace AzureTracker
                                 UseCaching = Settings.Default.UseCaching
                             });
 
-                if (isInitialized)
+                if (m_isInitialized)
                 {
                     m_azureProvider.DataFetchEvent += AzureProveiderDataFetchHandler;
 
@@ -50,8 +51,8 @@ namespace AzureTracker
                 }
                 else
                 {
+                    Abort();
                     OpenSettingsDialog();
-                    Init();
                 }
             }
             catch (Exception ex)
@@ -157,7 +158,7 @@ namespace AzureTracker
             }
         }
 
-        string m_syncAbortBtnText = string.Empty;
+        string m_syncAbortBtnText = "Sync";
         public string SyncAbortBtnText
         {
             get { return m_syncAbortBtnText; }
@@ -254,6 +255,7 @@ namespace AzureTracker
                 Settings.Default.Organization = azureSettingsVM.OrganizationName;
                 Settings.Default.PAT = azureSettingsVM.PAT;
                 Settings.Default.Save();
+                Init();
             }
         }
 
@@ -385,6 +387,10 @@ namespace AzureTracker
                 return;
 
             EnableSelection = false;
+
+            if (!m_isInitialized)
+                OpenSettingsDialog();
+
             Status = "Synchronizing. Please wait...";
             var t = new Task(
                 () =>
