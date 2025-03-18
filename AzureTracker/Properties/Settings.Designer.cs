@@ -13,7 +13,7 @@ namespace AzureTracker.Properties {
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "17.13.0.0")]
-    internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
+    internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase ,IAzureSettings {
         
         private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
         
@@ -38,9 +38,9 @@ namespace AzureTracker.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("30")]
-        public double BuildNotOlderThanDays {
+        public int BuildNotOlderThanDays {
             get {
-                return ((double)(this["BuildNotOlderThanDays"]));
+                return ((int)(this["BuildNotOlderThanDays"]));
             }
             set {
                 this["BuildNotOlderThanDays"] = value;
@@ -87,7 +87,7 @@ namespace AzureTracker.Properties {
           ""type"": ""Build"",
           ""fields"": [
           {
-          ""RepoName"": ""FFRAngio_Application;FFRAngio_AlgoMatlab;ServiceUtility_git""
+          ""RepoName"": ""Repo1;Repo2""
           }
           ]
           }

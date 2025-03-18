@@ -31,7 +31,7 @@ namespace AzureTracker
             var pBox = sender as PasswordBox;
             if (vm != null && pBox != null)
             {
-                vm.PAT = pBox.Password;
+                vm.AzureSettings.PAT = pBox.Password;
             }
         }
     }

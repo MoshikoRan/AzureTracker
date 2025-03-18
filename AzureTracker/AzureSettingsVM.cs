@@ -1,14 +1,23 @@
 ﻿namespace AzureTracker
 {
+    public interface IAzureSettings
+    {
+        public string Organization { get; set; }
+        public string PAT { get; set; }
+        public string WorkItemTypes { get; set; }
+        public int BuildNotOlderThanDays { get; set; }
+        public int MaxBuildsPerDefinition { get; set; } 
+        public bool UseCaching { get; set; }
+    }
     public class AzureSettingsVM
     {
-        public string OrganizationName { get; set; } = string.Empty;
-        public string PAT { get; set; } = string.Empty;
+        public string Organization { get; set; } = string.Empty;
 
-        public AzureSettingsVM(string organizationName, string pat)
+        public IAzureSettings AzureSettings { get; set; }
+
+        public AzureSettingsVM(IAzureSettings azureSettings)
         {
-            OrganizationName = organizationName;
-            PAT = pat;
+            AzureSettings = azureSettings;
         }
     }
 }

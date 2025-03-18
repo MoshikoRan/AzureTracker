@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:AzureTracker"
         mc:Ignorable="d"
-        Title="Azure Settings" Height="250" 
+        Title="Azure Settings" Height="480" 
         Width="1000" FontSize="20"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterOwner">
@@ -16,15 +16,17 @@
                 <RowDefinition MaxHeight="20" />
                 <RowDefinition MaxHeight="40"/>
                 <RowDefinition MaxHeight="40" />
+                <RowDefinition MaxHeight="40"/>
+                <RowDefinition />
                 <RowDefinition MaxHeight="40" />
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="260" />
+                <ColumnDefinition Width="380" />
                 <ColumnDefinition />
             </Grid.ColumnDefinitions>
             
             <TextBlock Grid.Row="0">Organization Name: </TextBlock>
-            <TextBox Grid.Row="0" Grid.Column="1" MinWidth="300" Text="{Binding OrganizationName}" />
+            <TextBox Grid.Row="0" Grid.Column="1" MinWidth="300" Text="{Binding AzureSettings.Organization}" />
 
             <TextBlock Grid.Row="2">Personal Access Token (PAT): </TextBlock>
             <PasswordBox Grid.Row="2" Grid.Column="1" MinWidth="300" PasswordChar="*" PasswordChanged="PasswordChangedHandler" />
@@ -35,7 +37,24 @@
                     RequestNavigate="Hyperlink_RequestNavigate">How to use personal access tokens?
                 </Hyperlink>
             </TextBlock>
-            <Button Grid.Row="4" Width="80" Grid.ColumnSpan="2" Content="Set" Click="Button_Click" />
+
+            <Separator Grid.Row="4" Grid.ColumnSpan="2" />
+
+
+            <StackPanel Grid.Row="5">
+                <TextBlock Margin="5">Work item types:</TextBlock>
+                <TextBlock Margin="5">Build not older than (Days):</TextBlock>
+                <TextBlock Margin="5">Maximun number of builds per definition:</TextBlock>
+                <TextBlock Margin="5">Use caching:</TextBlock>
+            </StackPanel>
+            <StackPanel Grid.Row="5" Grid.Column="1">
+                <TextBox Margin="0,5" Grid.Column="1" MinWidth="300" Text="{Binding AzureSettings.WorkItemTypes}" />
+                <TextBox Margin="0,5" Grid.Column="1" MinWidth="300" Text="{Binding AzureSettings.BuildNotOlderThanDays}" />
+                <TextBox Margin="0,5" Grid.Column="1" MinWidth="300" Text="{Binding AzureSettings.MaxBuildsPerDefinition}" />
+                <TextBox Margin="0,5" Grid.Column="1" MinWidth="300" Text="{Binding AzureSettings.UseCaching}" />
+            </StackPanel>
+
+            <Button Grid.Row="6" Width="80" MaxHeight="40" Grid.ColumnSpan="2" Content="Set" Click="Button_Click" />
         </Grid>
     </Grid>
 </Window>

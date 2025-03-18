@@ -245,15 +245,12 @@ namespace AzureTracker
 
         private void OpenSettingsDialog()
         {
-            var azureSettingsVM = new AzureSettingsVM(
-                Settings.Default.Organization,
-                Settings.Default.PAT);
+            var azuseSettings = (IAzureSettings)Settings.Default;
+            var azureSettingsVM = new AzureSettingsVM(azuseSettings);
             var azureSettingsWindow = new AzureSettingsWindow(azureSettingsVM);
             var res = azureSettingsWindow.ShowDialog();
             if (res.HasValue && res.Value == true)
             {
-                Settings.Default.Organization = azureSettingsVM.OrganizationName;
-                Settings.Default.PAT = azureSettingsVM.PAT;
                 Settings.Default.Save();
                 Init();
             }
