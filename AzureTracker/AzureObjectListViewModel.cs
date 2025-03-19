@@ -5,8 +5,10 @@ using System.Reflection;
 
 namespace AzureTracker
 {
+    public delegate void FilterChanged(Type t, string tag, string text);
     public class AzureObjectListViewModel : ViewModelBase
     {
+        public FilterChanged? OnFilterChanged = null;
         public const string INIT_VIEW = "InitView";
         public const string CLEAR_FILTER = "ClearFilter";
         public const string REFRESH_VIEW = "RefreshView";
@@ -94,8 +96,12 @@ namespace AzureTracker
 
         internal void SetFilter(string tag, string text)
         {
-            m_dicFilter[tag] = text;
-            FilterData();
+            if (m_data?.Count() > 0)
+            {
+                m_dicFilter[tag] = text;
+                FilterData();
+                OnFilterChanged?.Invoke(m_data.First().GetType(), tag, text);
+            }
         }
 
         internal string GetFilter(string tag)

@@ -27,8 +27,9 @@
                     </MenuItem>
                     <MenuItem Header="Filters">
                         <MenuItem Header="Clear Filter" Command="{Binding CmdClearFilter}" IsEnabled="{Binding EnableSelection}"/>
-                        <MenuItem Header="Reset Filter" Command="{Binding CmdResetFilter}" IsEnabled="{Binding EnableSelection}"/>
+                        <MenuItem Header="Default Filter" Command="{Binding CmdResetFilter}" IsEnabled="{Binding EnableSelection}"/>
                         <MenuItem Header="Reset Tab View" Click="ResetView_Click" IsEnabled="{Binding EnableSelection}"/>
+                        <MenuItem Header="Set As Default Filter" Command="{Binding CmdSetDefaultFilter}" IsEnabled="{Binding EnableSelection}"/>
                     </MenuItem>
                     <MenuItem Header="View Log" Click="ViewLog_Click"/>
                     <MenuItem Header="About" Command="{Binding CmdAbout}"/>

@@ -78,9 +78,55 @@ namespace AzureTracker
                 if (val != AzureObject.None)
                 {
                     AzureObjectVMDictionary.Add(val, new AzureObjectListViewModel());
+                    AzureObjectVMDictionary[val].OnFilterChanged += OnFilterChanged;
                 }
             }
         }
+
+        private void OnFilterChanged(Type t, string tag, string text)
+        {
+            try
+            {
+                if (!string.IsNullOrWhiteSpace(tag))
+                {
+                    for (int i = 0; i < m_jsonCurrentFilters?.Count; ++i)
+                    {
+                        JsonNode? jsonFilter = m_jsonCurrentFilters[i];
+                        var type = jsonFilter?["type"]?.ToString();
+                        if (string.Compare(type,t.Name)==0)
+                        {
+                            JsonArray? fields = jsonFilter?["fields"]?.AsArray();
+                            if (fields != null)
+                            {
+                                foreach (var field in fields)
+                                {
+                                    if (field != null)
+                                    {
+                                        var val = field[tag];
+                                        var valStr = val?.ToString();
+                                        if (valStr != null && string.Compare(valStr, text) != 0)
+                                        {
+                                            field[tag] = text;
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    Logger.Instance.Error("OnFilterChanged: tag is null or empty!");
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.Instance.Error(e.Message);
+            }
+
+        }
+
         private void AzureProveiderDataFetchHandler(AzureObject azureObject, string? projName, string? param)
         {
             Logger.Instance.Info($"Fetching {azureObject} from {projName} {param}...");
@@ -93,6 +139,7 @@ namespace AzureTracker
 
         Dictionary<AzureObject, Dictionary<string, string>> dicFilter = new Dictionary<AzureObject, Dictionary<string, string>>();
         JsonArray? m_jsonDefaultFilters = null;
+        JsonArray? m_jsonCurrentFilters = null;
 
         private void ResetFilters()
         {
@@ -105,6 +152,7 @@ namespace AzureTracker
                     {
                         JsonNode? value = json["defaultfilters"];
                         m_jsonDefaultFilters = value?.AsArray();
+                        m_jsonCurrentFilters = m_jsonDefaultFilters?.DeepClone().AsArray();
                     }
                 }
 
@@ -269,13 +317,40 @@ namespace AzureTracker
                 if (m_cmdResetFilter == null)
                 {
                     m_cmdResetFilter = new CommandHandler(
-                        new Action(ResetFilter));
+                        new Action(ResetToDefaultFilter));
                 }
                 return m_cmdResetFilter;
             }
         }
 
-        private void ResetFilter()
+        ICommand? m_cmdSetDefaultFilter = null;
+        public ICommand CmdSetDefaultFilter
+        {
+            get
+            {
+                if (m_cmdSetDefaultFilter == null)
+                {
+                    m_cmdSetDefaultFilter = new CommandHandler(
+                        new Action(SetDefaultFilter));
+                }
+                return m_cmdSetDefaultFilter;
+            }
+        }
+
+        private void SetDefaultFilter()
+        {
+            JsonObject obj = new JsonObject();
+            var def = obj["defaultfilters"] = m_jsonCurrentFilters?.DeepClone();
+            if (def != null)
+            {
+                Settings.Default.DefaultFilters = obj.ToJsonString();
+                Settings.Default.Save();
+                m_jsonDefaultFilters = def.AsArray();
+                ResetFilters();
+            }
+        }
+
+        private void ResetToDefaultFilter()
         {
             for (int i = 0; i < m_jsonDefaultFilters?.Count; ++i)
             {
