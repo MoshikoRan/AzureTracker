@@ -10,6 +10,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Input;
 using static AzureTracker.AzureProvider;
 
@@ -52,7 +53,6 @@ namespace AzureTracker
                 }
                 else
                 {
-                    Abort();
                     OpenSettingsDialog();
                 }
             }
@@ -310,6 +310,7 @@ namespace AzureTracker
             var azuseSettings = (IAzureSettings)Settings.Default;
             var azureSettingsVM = new AzureSettingsVM(azuseSettings);
             var azureSettingsWindow = new AzureSettingsWindow(azureSettingsVM);
+            azureSettingsWindow.Owner = Application.Current.MainWindow;
             var res = azureSettingsWindow.ShowDialog();
             if (res.HasValue && res.Value == true)
             {
