@@ -338,13 +338,28 @@ namespace AzureTracker
             SystemCommands.MinimizeWindow(this);
         }
 
+        bool m_isMaximized = false;
         private void Maximize_Click(object sender, RoutedEventArgs e)
         {
-            SystemCommands.MaximizeWindow(this);
+            if (m_isMaximized)
+            {
+                SystemCommands.RestoreWindow(this);
+                m_isMaximized = false;
+            }
+            else
+            {
+                SystemCommands.MaximizeWindow(this);
+                m_isMaximized = true;
+            }
         }
         private void Close_Click(object sender, RoutedEventArgs e)
         {
             Application.Current.Shutdown();
+        }
+
+        private void Window_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            this.DragMove();
         }
     }
 }

@@ -6,7 +6,8 @@
         xmlns:wpfCef="clr-namespace:CefSharp.Wpf;assembly=CefSharp.Wpf"
         mc:Ignorable="d" Loaded="Window_Loaded" Closed="Window_Closed"
         Title="Azure Tracker" Height="1000" Width="1600"
-        WindowStyle="None" Background="AliceBlue">
+        WindowStyle="None" Background="AliceBlue"
+        MouseLeftButtonDown="Window_MouseLeftButtonDown">
     <Grid >
         <Grid.RowDefinitions>
             <RowDefinition Height="40" />
