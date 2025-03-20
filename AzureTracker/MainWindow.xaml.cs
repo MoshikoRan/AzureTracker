@@ -174,7 +174,7 @@ namespace AzureTracker
             var menuItemClose = new MenuItem();
             menuItemClose.Header = "Close";
             menuItemClose.Tag = found;
-            menuItemClose.Click += Close_Click;
+            menuItemClose.Click += MenuClose_Click;
 
             //close all tabs
             var menuItemCloseAll = new MenuItem();
@@ -278,7 +278,7 @@ namespace AzureTracker
             }
         }
 
-        private void Close_Click(object sender, RoutedEventArgs e)
+        private void MenuClose_Click(object sender, RoutedEventArgs e)
         {
             var menuItem = sender as MenuItem;
             if (menuItem != null)
@@ -331,6 +331,20 @@ namespace AzureTracker
             m_logWindow.Content = logTxt;
             m_logWindow.Show();
             logTxt.ScrollToEnd();
+        }
+
+        private void Minimize_Click(object sender, RoutedEventArgs e)
+        {
+            SystemCommands.MinimizeWindow(this);
+        }
+
+        private void Maximize_Click(object sender, RoutedEventArgs e)
+        {
+            SystemCommands.MaximizeWindow(this);
+        }
+        private void Close_Click(object sender, RoutedEventArgs e)
+        {
+            Application.Current.Shutdown();
         }
     }
 }

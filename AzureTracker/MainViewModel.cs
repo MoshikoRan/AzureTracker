@@ -89,27 +89,40 @@ namespace AzureTracker
             {
                 if (!string.IsNullOrWhiteSpace(tag))
                 {
-                    for (int i = 0; i < m_jsonCurrentFilters?.Count; ++i)
+                    JsonNode? jsonFilter = FilterByAzureObject(m_jsonCurrentFilters, Enum.Parse<AzureObject>(t.Name));
+                    if (jsonFilter!=null)
                     {
-                        JsonNode? jsonFilter = m_jsonCurrentFilters[i];
-                        var type = jsonFilter?["type"]?.ToString();
-                        if (string.Compare(type,t.Name)==0)
+                        JsonArray? fields = jsonFilter?["fields"]?.AsArray();
+                        if (fields != null)
                         {
-                            JsonArray? fields = jsonFilter?["fields"]?.AsArray();
-                            if (fields != null)
+                            bool found = false;
+                            foreach (var field in fields)
                             {
-                                foreach (var field in fields)
+                                if (field != null)
                                 {
-                                    if (field != null)
+                                    var val = field[tag];
+                                    if (val != null)
                                     {
-                                        var val = field[tag];
                                         var valStr = val?.ToString();
                                         if (valStr != null && string.Compare(valStr, text) != 0)
                                         {
                                             field[tag] = text;
-                                            break;
                                         }
-                                    }
+                                        found = true;
+                                        break;
+                                    }                                        
+                                }
+                            }
+                            if (!found)
+                            {
+                                //no field with name = tag was found in json filter
+                                //check if type contains property with name = tag
+                                var pi = t.GetProperty(tag);
+                                if (pi != null)
+                                {
+                                    string json = "{\"" + $"{tag}" + "\"" + $":\"{text}\"" + "}";
+                                    JsonNode? jsonNode = JsonNode.Parse(json);
+                                    fields.Add(jsonNode);
                                 }
                             }
                         }
@@ -304,9 +317,31 @@ namespace AzureTracker
             }
         }
 
+        private JsonNode? FilterByAzureObject(JsonArray? jsonFiltersArray, AzureObject ao)
+        {
+            JsonNode? typeFilter = null;
+            for (int i = 0; i < jsonFiltersArray?.Count; ++i)
+            {
+                JsonNode? jsonFilter = jsonFiltersArray[i];
+                var typeJson = jsonFilter?["type"]?.ToString();
+                if (string.Compare(ao.ToString(), typeJson) == 0)
+                {
+                    typeFilter = jsonFilter;
+                    break;
+                }
+            }
+
+            return typeFilter;
+        }
+
         private void ClearFilter()
         {
             AzureObjectVMDictionary[SelectedAzureObject].ClearFilter();
+            var filter = FilterByAzureObject(m_jsonCurrentFilters, SelectedAzureObject);
+            if (filter != null)
+            {
+                filter["fields"]?.AsArray().Clear();
+            }
         }
 
         ICommand? m_cmdResetFilter = null;
@@ -388,7 +423,7 @@ namespace AzureTracker
         public string Status {
             get
             {
-                return m_sStatus;
+                return "Status: " + m_sStatus;
             }
             set
             {
