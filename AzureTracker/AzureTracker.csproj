@@ -36,6 +36,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Resource Include="images\icons8-close-button-48.png" />
+    <Resource Include="images\icons8-minimize-window-50.png" />
+    <Resource Include="images\maximize.256x256.png" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Update="Properties\Settings.Designer.cs">
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <AutoGen>True</AutoGen>
