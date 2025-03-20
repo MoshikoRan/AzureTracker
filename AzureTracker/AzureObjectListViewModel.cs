@@ -70,6 +70,8 @@ namespace AzureTracker
                         }
                     }
                 }
+                if (filteredData.Count() == 0)
+                    filteredData = m_data;
             }
             AzureObjectsBase = filteredData;
         }

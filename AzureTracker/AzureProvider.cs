@@ -743,8 +743,8 @@ namespace AzureTracker
 
                 if (arrBuilds?.Count > 0)
                 {
-                    IEnumerable<JsonNode?> jsonBuilds = arrBuilds.ToArray()
-                        .Where((jsonBuild) => QueueTimeEarlierThan(jsonBuild, earliestCreateDate));
+                    IEnumerable<JsonNode?> jsonBuilds = 
+                        arrBuilds.Where((jsonBuild) => QueueTimeEarlierThan(jsonBuild, earliestCreateDate));
 
                     foreach (JsonNode? jsonBuild in jsonBuilds)
                     {
