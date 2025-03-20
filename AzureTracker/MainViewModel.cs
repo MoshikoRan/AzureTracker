@@ -7,6 +7,7 @@ using System.Configuration;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -432,6 +433,14 @@ namespace AzureTracker
                     m_sStatus = value;
                     OnPropertyChanged();
                 }
+            }
+        }
+
+        public string Version
+        {
+            get
+            {
+                return $"Version: {Assembly.GetExecutingAssembly()?.GetName()?.Version?.ToString()}";
             }
         }
 
