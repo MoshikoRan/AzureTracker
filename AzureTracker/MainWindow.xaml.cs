@@ -338,6 +338,7 @@ namespace AzureTracker
             SystemCommands.MinimizeWindow(this);
         }
 
+        Rect m_notMaximizedPosition = new Rect();
         bool m_isMaximized = false;
         private void Maximize_Click(object sender, RoutedEventArgs e)
         {
@@ -348,6 +349,7 @@ namespace AzureTracker
             }
             else
             {
+                m_notMaximizedPosition = new Rect(Left, Top, Width, Height);
                 SystemCommands.MaximizeWindow(this);
                 m_isMaximized = true;
             }
@@ -359,7 +361,39 @@ namespace AzureTracker
 
         private void Window_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
-            this.DragMove();
+            DragMove();
+        }
+
+        int mouseMoveEventCount = 0;
+        private void Window_MouseMove(object sender, System.Windows.Input.MouseEventArgs e)
+        {
+            if (e.LeftButton == System.Windows.Input.MouseButtonState.Pressed)
+            {
+                mouseMoveEventCount++;
+
+                if (mouseMoveEventCount > 2)
+                {
+                    if (m_isMaximized)
+                    {
+                        var pos = e.GetPosition(this);
+
+                        Top = m_notMaximizedPosition.Top * pos.Y / m_notMaximizedPosition.Height;
+                        Left = m_notMaximizedPosition.Left * pos.X / m_notMaximizedPosition.Width;
+                        Width = m_notMaximizedPosition.Width;
+                        Height = m_notMaximizedPosition.Height;
+                        SystemCommands.RestoreWindow(this);
+                        m_isMaximized = false;
+                    }
+                    else
+                    {
+                        DragMove();
+                    }
+                }
+            }
+            else
+            {
+                mouseMoveEventCount = 0;
+            }
         }
     }
 }
