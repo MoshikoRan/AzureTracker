@@ -119,11 +119,15 @@ namespace AzureTracker
         }
         private void OnViewItem(AzureObjectBase? aob)
         {
-            var uri = aob?.Uri?.AbsoluteUri;
+            AddOrSelectTab(aob?.Uri?.AbsoluteUri, GetTabHeader(aob));
+        }
+
+        private void AddOrSelectTab(string? uri, string header)
+        {
             WebTabItem? found = GetWebTabItemByUri(uri);
             if (found == null)
             {
-                found = CreatNewTab(uri, GetTabHeader(aob));
+                found = CreatNewTab(uri, header);
                 ChromeTabCtrl.Items.Add(found);
             }
             else
@@ -158,44 +162,33 @@ namespace AzureTracker
             found.Uri = uri;
             found.ToolTip = uri;
 
+            found.ContextMenu = new ContextMenu();
             //copy uri
-            var menuItemCopy = new MenuItem();
-            menuItemCopy.Header = "Copy Url";
-            menuItemCopy.Tag = uri;
-            menuItemCopy.Click += CopyUri_Click;
+            CreateTabMenuItem(found, "Copy Url", uri, CopyUri_Click);
 
-            //copy uri
-            var menuItemOpenChrome = new MenuItem();
-            menuItemOpenChrome.Header = "Open System Browser";
-            menuItemOpenChrome.Tag = uri;
-            menuItemOpenChrome.Click += MenuItemOpenChrome_Click;
+            //open System browser
+            CreateTabMenuItem(found, "Open System Browser", uri, MenuItemOpenChrome_Click);
 
             //close currnt tab
-            var menuItemClose = new MenuItem();
-            menuItemClose.Header = "Close";
-            menuItemClose.Tag = found;
-            menuItemClose.Click += MenuClose_Click;
+            CreateTabMenuItem(found, "Close", found, MenuClose_Click);
 
             //close all tabs
-            var menuItemCloseAll = new MenuItem();
-            menuItemCloseAll.Header = "Close all tabs";
-            menuItemCloseAll.Tag = found;
-            menuItemCloseAll.Click += CloseAllTabs;
+            CreateTabMenuItem(found, "Close all tabs", found, CloseAllTabs);
 
             //close all tabs but current
-            var menuItemCloseAllButThis = new MenuItem();
-            menuItemCloseAllButThis.Header = "Close all tabs but this";
-            menuItemCloseAllButThis.Tag = found;
-            menuItemCloseAllButThis.Click += CloseAllTabsButThis;
-
-            found.ContextMenu = new ContextMenu();
-            found.ContextMenu.Items.Add(menuItemCopy);
-            found.ContextMenu.Items.Add(menuItemOpenChrome);
-            found.ContextMenu.Items.Add(menuItemClose);
-            found.ContextMenu.Items.Add(menuItemCloseAll);
-            found.ContextMenu.Items.Add(menuItemCloseAllButThis);
+            CreateTabMenuItem(found, "Close all tabs but this", found, CloseAllTabsButThis);
 
             return found;
+        }
+
+        private void CreateTabMenuItem(WebTabItem tab, string header, object? tag, RoutedEventHandler clickEvent)
+        {
+            var menuItem = new MenuItem();
+            menuItem.Header = header;
+            menuItem.Tag = tag;
+            menuItem.Click += clickEvent;
+
+            tab.ContextMenu.Items.Add(menuItem);
         }
 
         private void MenuItemOpenChrome_Click(object sender, RoutedEventArgs e)
@@ -393,6 +386,16 @@ namespace AzureTracker
             else
             {
                 mouseMoveEventCount = 0;
+            }
+        }
+
+        private void OpenAzure_Click(object sender, RoutedEventArgs e)
+        {
+            var vm = DataContext as MainViewModel;
+
+            if (vm != null)
+            {
+                AddOrSelectTab(vm.OrganizationUrl, "Azure");
             }
         }
     }

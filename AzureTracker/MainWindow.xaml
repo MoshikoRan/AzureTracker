@@ -39,7 +39,8 @@
                     </Menu.Resources>
                     <MenuItem Header="Azure">
                         <MenuItem Header="{Binding SyncAbortBtnText}" Command="{Binding CmdSyncAbort}"/>
-                        <MenuItem Header="Settings" Command="{Binding CmdSettings}"/>
+                        <MenuItem Header="Open Azure DevOps" Click="OpenAzure_Click" IsEnabled="{Binding EnableSelection}"/>
+                        <MenuItem Header="Settings" Command="{Binding CmdSettings}" IsEnabled="{Binding EnableSelection}"/>
                     </MenuItem>
                     <Separator />
                     <MenuItem Header="Filters">

@@ -248,6 +248,14 @@ namespace AzureTracker
             }
         }
 
+        public string? OrganizationUrl
+        {
+            get
+            {
+                return m_azureProvider?.AzureEndPoint;
+            }
+        }
+
         ICommand? m_cmdSwitchContent = null;
         public ICommand CmdSwitchContent
         {
