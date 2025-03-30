@@ -46,6 +46,7 @@ namespace AzureTracker
             }
         }
 
+        private bool m_bItemDblClick = false;
         private void ItemDblClick(AzureObjectBase? aob)
         {
             var vm = DataContext as MainViewModel;
@@ -54,6 +55,7 @@ namespace AzureTracker
                 vm.SyncAzureObject(aob);
             }
             OnViewItem(aob);
+            m_bItemDblClick = true;
         }
 
         private void AzureObjectTabCtrl_Selected(object sender, SelectionChangedEventArgs e)
@@ -375,11 +377,6 @@ namespace AzureTracker
             }
         }
 
-        private void Window_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
-        {
-            DragMoveInternal();
-        }
-
         int mouseMoveEventCount = 0;
         private void Window_MouseMove(object sender, System.Windows.Input.MouseEventArgs e)
         {
@@ -405,6 +402,18 @@ namespace AzureTracker
             if (vm != null)
             {
                 AddOrSelectTab(vm.OrganizationUrl, "Azure");
+            }
+        }
+
+        private void Window_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            if (!m_bItemDblClick)
+            {
+                Maximize_Click(sender, e);
+            }
+            else
+            {
+                m_bItemDblClick = false;
             }
         }
     }

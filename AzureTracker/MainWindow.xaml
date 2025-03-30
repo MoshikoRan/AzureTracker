@@ -7,8 +7,8 @@
         mc:Ignorable="d" Loaded="Window_Loaded" Closed="Window_Closed"
         Title="Azure Tracker" Height="1000" Width="1600"
         WindowStyle="None" Background="AliceBlue"
-        MouseLeftButtonDown="Window_MouseLeftButtonDown"
-        MouseMove="Window_MouseMove">
+        MouseMove="Window_MouseMove"
+        MouseDoubleClick="Window_MouseDoubleClick">
     <Grid >
         <Grid.RowDefinitions>
             <RowDefinition Height="40" />
