@@ -6,6 +6,7 @@ using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Input;
 
 namespace AzureTracker
 {
@@ -352,9 +353,31 @@ namespace AzureTracker
             Application.Current.Shutdown();
         }
 
+        private void DragMoveInternal()
+        {
+            if (Mouse.DirectlyOver is not GridSplitter)
+            {
+                if (m_isMaximized)
+                {
+                    var pos = Mouse.GetPosition(this);
+
+                    Top = m_notMaximizedPosition.Top * pos.Y / m_notMaximizedPosition.Height;
+                    Left = m_notMaximizedPosition.Left * pos.X / m_notMaximizedPosition.Width;
+                    Width = m_notMaximizedPosition.Width;
+                    Height = m_notMaximizedPosition.Height;
+                    SystemCommands.RestoreWindow(this);
+                    m_isMaximized = false;
+                }
+                else
+                {
+                    DragMove();
+                }
+            }
+        }
+
         private void Window_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
-            DragMove();
+            DragMoveInternal();
         }
 
         int mouseMoveEventCount = 0;
@@ -366,21 +389,7 @@ namespace AzureTracker
 
                 if (mouseMoveEventCount > 2)
                 {
-                    if (m_isMaximized)
-                    {
-                        var pos = e.GetPosition(this);
-
-                        Top = m_notMaximizedPosition.Top * pos.Y / m_notMaximizedPosition.Height;
-                        Left = m_notMaximizedPosition.Left * pos.X / m_notMaximizedPosition.Width;
-                        Width = m_notMaximizedPosition.Width;
-                        Height = m_notMaximizedPosition.Height;
-                        SystemCommands.RestoreWindow(this);
-                        m_isMaximized = false;
-                    }
-                    else
-                    {
-                        DragMove();
-                    }
+                    DragMoveInternal();
                 }
             }
             else

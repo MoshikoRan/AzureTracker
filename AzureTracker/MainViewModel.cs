@@ -524,7 +524,7 @@ namespace AzureTracker
                     {
                         SyncAbortBtnText = "Abort Sync";
                         m_azureProvider?.Sync(azureObject);
-                        Status = "Done!";
+                        Status = "Ready!";
                     }
                     catch (Exception ex)
                     {
