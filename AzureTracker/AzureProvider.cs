@@ -52,6 +52,8 @@ namespace AzureTracker
 
         public string? IterationPath { get; set; } = string.Empty;
 
+        public string? AreaPath { get; set; } = string.Empty;
+
         public string? Tags { get; set; } = string.Empty;
 
         public DateTime? ResolvedDate { get; set; }
@@ -545,6 +547,7 @@ namespace AzureTracker
             wit.Priority = fields?["Microsoft.VSTS.Common.Priority"]?.ToString();
             wit.RnDPriority = fields?["Custom.RnDPriority"]?.ToString();
             wit.IterationPath = fields?["System.IterationPath"]?.ToString();
+            wit.AreaPath = fields?["System.AreaPath"]?.ToString();
             wit.Tags = fields?["System.Tags"]?.ToString();
             wit.CreatedDate = fields?["System.CreatedDate"]?.GetValue<DateTime>();
             wit.ChangedDate = fields?["System.ChangedDate"]?.GetValue<DateTime>();
