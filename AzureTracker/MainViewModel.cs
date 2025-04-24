@@ -586,10 +586,6 @@ namespace AzureTracker
                             Logger.Instance.Error($"SyncAzureObject: could not parse azure object type");
                         }
                     }
-                    else
-                    {
-                        Logger.Instance.Error($"SyncAzureObject: SyncAzureObject failed!");
-                    }
                 }
                 else
                 {
