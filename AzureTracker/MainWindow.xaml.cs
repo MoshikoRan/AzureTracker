@@ -3,6 +3,7 @@ using CefSharp;
 using CefSharp.Wpf;
 using CefSharp.Wpf.Handler;
 using System;
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -37,12 +38,22 @@ namespace AzureTracker
                     AzureObjectList aol = new AzureObjectList();
                     aol.DataContext = vm.AzureObjectVMDictionary[key];
                     aol.ItemDoubleClickEvent += ItemDblClick;
+                    aol.UpdateItemsEvent += UpdateItems;
                     TabItem ti = new TabItem();
                     ti.Header = key.ToString();
                     ti.Content = aol;
                     ti.Width = 100;
                     AzureObjectTabCtrl.Items.Add(ti);
                 }
+            }
+        }
+
+        private void UpdateItems(List<AzureObjectBase> listAOB)
+        {
+            var vm = DataContext as MainViewModel;
+            if (vm != null)
+            {
+                vm.SyncAzureObjects(listAOB);
             }
         }
 

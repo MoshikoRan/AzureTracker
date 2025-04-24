@@ -27,6 +27,10 @@ namespace AzureTracker
 
         public delegate void ItemDoubleClickEventHandler(AzureObjectBase? aob);
         public event ItemDoubleClickEventHandler? ItemDoubleClickEvent;
+
+        public delegate void UpdateSelectedItemsHandler(List<AzureObjectBase> listAOB);
+        public event UpdateSelectedItemsHandler? UpdateItemsEvent;
+
         private void AzureObjectList_PropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == AzureObjectListViewModel.INIT_VIEW)
@@ -216,6 +220,11 @@ namespace AzureTracker
                 if (col.Width < MIN_COL_WIDTH)
                     col.Width = MIN_COL_WIDTH;
             }
+        }
+
+        private void LV_UpdateSelected_Click(object sender, RoutedEventArgs e)
+        {
+            UpdateItemsEvent?.Invoke(lv.SelectedItems.Cast<AzureObjectBase>().ToList());
         }
     }
 }

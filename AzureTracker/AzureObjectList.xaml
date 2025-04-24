@@ -16,6 +16,11 @@
         </StackPanel>
         <ListView Grid.Row="0" x:Name="lv" ItemsSource="{Binding AzureObjectsBase}" 
                     GridViewColumnHeader.Click="GridViewColumnHeaderClickedHandler" >
+            <ListView.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="Update Selected Items" Click="LV_UpdateSelected_Click" />
+                </ContextMenu>
+            </ListView.ContextMenu>
             <ListView.ItemContainerStyle>
                 <Style TargetType="ListViewItem">
                     <EventSetter Event="MouseLeftButtonUp" Handler="ListViewItem_Click" />

@@ -12,6 +12,7 @@ using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Threading;
 using static AzureTracker.AzureProvider;
 
 namespace AzureTracker
@@ -578,18 +579,45 @@ namespace AzureTracker
                         if (Enum.TryParse(aob.GetType().Name, out ao))
                         {
                             SetVMDictionaryData(ao);
+                            Logger.Instance.Info($"SyncAzureObject: updating {aob.GetType().Name} ID = {aob.ID}");
                         }
                         else
                         {
                             Logger.Instance.Error($"SyncAzureObject: could not parse azure object type");
                         }
                     }
+                    else
+                    {
+                        Logger.Instance.Error($"SyncAzureObject: SyncAzureObject failed!");
+                    }
+                }
+                else
+                {
+                    Logger.Instance.Error($"SyncAzureObject: aob and/or m_azureProvider are/is null");
                 }
             }
             catch (Exception e)
             {
                 Logger.Instance.Error(e.Message);
             }
+        }
+
+        internal void SyncAzureObjects(List<AzureObjectBase> listAOB)
+        {
+            if (!m_isInitialized)
+                OpenSettingsDialog();
+
+            EnableSelection = false;
+
+            Dispatcher.CurrentDispatcher.InvokeAsync(() =>
+            {
+                foreach (var aob in listAOB)
+                {
+                    SyncAzureObject(aob);
+                }
+
+                EnableSelection = true;
+            });
         }
 
         public void OnBeforeDownload(IWebBrowser chromiumWebBrowser, IBrowser browser, DownloadItem downloadItem)
