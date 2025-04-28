@@ -419,13 +419,23 @@ namespace AzureTracker
 
         private void Window_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            if (!m_bItemDblClick)
+            var depObj = e.MouseDevice.DirectlyOver as DependencyObject;
+            if (depObj != null)
             {
-                Maximize_Click(sender, e);
-            }
-            else
-            {
-                m_bItemDblClick = false;
+                var listView = Helpers.FindParent<ListView>(depObj);
+                var webBrowser = Helpers.FindParent<WebBrowser>(depObj);
+
+                if (listView == null && webBrowser == null)
+                {
+                    if (!m_bItemDblClick)
+                    {
+                        Maximize_Click(sender, e);
+                    }
+                    else
+                    {
+                        m_bItemDblClick = false;
+                    }
+                }
             }
         }
     }

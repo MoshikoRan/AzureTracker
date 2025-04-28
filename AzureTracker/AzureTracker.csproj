@@ -31,7 +31,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="CefSharp.Wpf.NETCore" Version="130.1.90" />
+    <PackageReference Include="CefSharp.Wpf.NETCore" Version="135.0.220" />
     <PackageReference Include="Microsoft.TeamFoundationServer.Client" Version="19.225.1" />
   </ItemGroup>
 
