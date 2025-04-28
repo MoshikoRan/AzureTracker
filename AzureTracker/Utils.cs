@@ -78,7 +78,7 @@ namespace AzureTracker.Utils
                     }
                     catch (Exception e)
                     {
-                        Logger.Instance.Error(e.Message);
+                        Logger.Instance.Error(e.Message + $" dir = {dir}, prog = {prog}");
                     }
                 }
             }

@@ -636,6 +636,16 @@ namespace AzureTracker
             EnableSelection = true;
         }
 
+        internal void SaveLog()
+        {
+            var logPath = Path.Combine(Assembly.GetExecutingAssembly().Location, "..\\Logs");
+            if (!Directory.Exists(logPath))
+            {
+                Directory.CreateDirectory(logPath);
+            }
+            Logger.Instance.Save(Path.Combine(logPath, DateTime.Now.ToFileTime().ToString() + ".log"));
+        }
+
         IDownloadHandler? m_downloadHandler = null;
         public IDownloadHandler ChromeDownloadHandler
         {

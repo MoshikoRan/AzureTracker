@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -67,6 +68,11 @@ namespace AzureTracker
         {
             m_sbLog?.Clear();
             NewLog?.Invoke();
+        }
+
+        internal void Save(string path)
+        {
+            File.WriteAllText(path, m_sbLog.ToString());
         }
     }
 }

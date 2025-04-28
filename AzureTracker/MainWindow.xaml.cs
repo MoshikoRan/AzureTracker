@@ -103,6 +103,7 @@ namespace AzureTracker
             if (vm != null)
             {
                 vm.UnInit();
+                vm.SaveLog();
             }
 
             Application.Current.Shutdown();
