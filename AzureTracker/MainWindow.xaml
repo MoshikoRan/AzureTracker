@@ -77,7 +77,13 @@
                 SelectionChanged ="AzureObjectTabCtrl_Selected" />
 
         <Grid Grid.Row="2" Margin="5,0,5,5">
-            <TabControl FontSize="14" x:Name="ChromeTabCtrl" IsEnabled="{Binding EnableSelection}" />
+            <TabControl FontSize="14" x:Name="ChromeTabCtrl" IsEnabled="{Binding EnableSelection}">
+                <TabControl.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="Close All Tabs" Click="CloseAllTabs" IsEnabled="{Binding EnableSelection}" />
+                    </ContextMenu>
+                </TabControl.ContextMenu>
+            </TabControl>
         </Grid>
 
         <GridSplitter Grid.Row="1" Height="5" Background="Gray" 
