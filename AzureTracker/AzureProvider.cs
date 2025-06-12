@@ -35,8 +35,6 @@ namespace AzureTracker
         public Uri? Uri { get; set; }
 
         public string? CreatedBy { get; set; } = string.Empty;
-
-        public DateTime? CreatedDate { get; set; }
     }
 
     public class WorkItem : AzureObjectBase 
@@ -59,6 +57,8 @@ namespace AzureTracker
         public DateTime? ResolvedDate { get; set; }
 
         public string? ResolvedBy { get; set; } = string.Empty;
+
+        public DateTime? CreatedDate { get; set; }
     }
     
     public class PR : AzureObjectBase
@@ -69,6 +69,8 @@ namespace AzureTracker
         public string? TargetBranch { get; set; } = string.Empty;
         public string? Reviewers { get; set; } = string.Empty;
         public string? IsDraft { get; internal set; } = string.Empty;
+
+        public DateTime? CreatedDate { get; set; }
     }
 
     public class Build : AzureObjectBase 
@@ -78,6 +80,11 @@ namespace AzureTracker
 
         public string? Result { get; internal set; } = string.Empty;
         public string? Definition { get; internal set; } = string.Empty;
+        public DateTime? QueueTime { get; set; }
+        public DateTime? StartTime { get; set; }
+        public DateTime? FinishTime { get; set; }
+		
+        public string? PoolName { get; set; } = string.Empty;
     }
 
 
@@ -779,9 +786,19 @@ namespace AzureTracker
             build.CreatedBy = jsonBuild?["requestedBy"]?["displayName"]?.ToString();
             build.Branch = jsonBuild?["sourceBranch"]?.ToString();
             string? sDateTime = jsonBuild?["queueTime"]?.ToString();
-            DateTime dt;
-            if (DateTime.TryParse(sDateTime, out dt))
-                build.CreatedDate = dt;
+            DateTime dt1, dt2, dt3;
+            if (DateTime.TryParse(sDateTime, out dt1))
+                build.QueueTime = dt1;
+
+            sDateTime = jsonBuild?["startTime"]?.ToString();
+            if (DateTime.TryParse(sDateTime, out dt2))
+                build.StartTime = dt2;
+
+            sDateTime = jsonBuild?["finishTime"]?.ToString();
+            if (DateTime.TryParse(sDateTime, out dt3))
+                build.FinishTime = dt3;
+
+            build.PoolName = jsonBuild?["queue"]?["pool"]?["name"]?.ToString();
 
             build.Definition = jsonBuild?["definition"]?["name"]?.ToString();
 
