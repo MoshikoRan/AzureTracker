@@ -347,19 +347,16 @@ namespace AzureTracker
         }
 
         Rect m_notMaximizedPosition = new Rect();
-        bool m_isMaximized = false;
         private void Maximize_Click(object sender, RoutedEventArgs e)
         {
-            if (m_isMaximized)
+            if (WindowState == WindowState.Maximized)
             {
                 SystemCommands.RestoreWindow(this);
-                m_isMaximized = false;
             }
             else
             {
                 m_notMaximizedPosition = new Rect(Left, Top, Width, Height);
                 SystemCommands.MaximizeWindow(this);
-                m_isMaximized = true;
             }
         }
         private void Close_Click(object sender, RoutedEventArgs e)
@@ -371,7 +368,7 @@ namespace AzureTracker
         {
             if (Mouse.DirectlyOver is not GridSplitter)
             {
-                if (m_isMaximized)
+                if (WindowState == WindowState.Maximized)
                 {
                     var pos = Mouse.GetPosition(this);
 
@@ -380,7 +377,6 @@ namespace AzureTracker
                     Width = m_notMaximizedPosition.Width;
                     Height = m_notMaximizedPosition.Height;
                     SystemCommands.RestoreWindow(this);
-                    m_isMaximized = false;
                 }
                 else
                 {
