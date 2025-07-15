@@ -12,8 +12,9 @@ namespace AzureTracker.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "17.13.0.0")]
-    internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase ,IAzureSettings {
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "17.14.0.0")]
+    internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase, IAzureSettings
+    {
         
         private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
         
@@ -44,18 +45,6 @@ namespace AzureTracker.Properties {
             }
             set {
                 this["BuildNotOlderThanDays"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("cathworks")]
-        public string Organization {
-            get {
-                return ((string)(this["Organization"]));
-            }
-            set {
-                this["Organization"] = value;
             }
         }
         
@@ -136,6 +125,30 @@ namespace AzureTracker.Properties {
             }
             set {
                 this["PAT"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string Organization {
+            get {
+                return ((string)(this["Organization"]));
+            }
+            set {
+                this["Organization"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("100")]
+        public int MaxCommitsPerRepo {
+            get {
+                return ((int)(this["MaxCommitsPerRepo"]));
+            }
+            set {
+                this["MaxCommitsPerRepo"] = value;
             }
         }
     }

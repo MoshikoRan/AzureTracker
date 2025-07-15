@@ -121,6 +121,7 @@ namespace AzureTracker
             public double BuildNotOlderThanDays { get; set; } = 5;
 
             public int MaxBuildsPerDefinition { get; set; } = 100;
+            public object MaxCommitsPerRepo { get; internal set; } = 100;
 
             public bool UseCaching = true;
         }
@@ -316,7 +317,7 @@ namespace AzureTracker
                 default:
                     foreach (AzureObject ao in (AzureObject[])Enum.GetValues(typeof(AzureObject)))
                     {
-                        if (ao != AzureObject.None)
+                        if (ao != AzureObject.None && !Aborting)
                             Sync(ao);
                     }
                     break;
@@ -634,7 +635,7 @@ namespace AzureTracker
 
             string sResponse = string.Empty;
             string uri =
-                $"{AzureEndPoint}/{p}/_apis/git/repositories/{r}/commits?&searchCriteria.$top={100}&{API_VERSION}";
+                $"{AzureEndPoint}/{p}/_apis/git/repositories/{r}/commits?&searchCriteria.$top={m_APConfig.MaxCommitsPerRepo}&{API_VERSION}";
 
             if (AzureGetRequest(uri, out sResponse))
             {
@@ -651,7 +652,6 @@ namespace AzureTracker
             }
         }
 
-        static int idx = 1;
         private void ParseCommits(Dictionary<Int64, AzureObjectBase> dicCommits, JsonNode jsonCommit, string? p, string? r)
         {
             JsonArray? jsonCommits = jsonCommit?["value"]?.AsArray();

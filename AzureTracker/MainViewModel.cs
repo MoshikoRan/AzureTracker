@@ -42,6 +42,7 @@ namespace AzureTracker
                                 WorkItemTypes = Settings.Default.WorkItemTypes.Split(";", StringSplitOptions.RemoveEmptyEntries),
                                 BuildNotOlderThanDays = Settings.Default.BuildNotOlderThanDays,
                                 MaxBuildsPerDefinition = Settings.Default.MaxBuildsPerDefinition,
+                                MaxCommitsPerRepo = Settings.Default.MaxCommitsPerRepo,
                                 UseCaching = Settings.Default.UseCaching
                             });
 

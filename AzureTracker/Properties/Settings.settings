@@ -8,9 +8,6 @@
     <Setting Name="BuildNotOlderThanDays" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">30</Value>
     </Setting>
-    <Setting Name="Organization" Type="System.String" Scope="User">
-      <Value Profile="(Default)">cathworks</Value>
-    </Setting>
     <Setting Name="DefaultFilters" Type="System.String" Scope="User">
       <Value Profile="(Default)">
           {
@@ -54,6 +51,12 @@
     </Setting>
     <Setting Name="PAT" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="Organization" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="MaxCommitsPerRepo" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">100</Value>
     </Setting>
   </Settings>
 </SettingsFile>

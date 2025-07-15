@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:AzureTracker"
         mc:Ignorable="d"
-        Title="Azure Settings" Height="480" 
+        Title="Azure Settings" Height="520" 
         Width="1000" FontSize="20"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterOwner">
@@ -21,7 +21,7 @@
                 <RowDefinition MaxHeight="40" />
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="380" />
+                <ColumnDefinition Width="420" />
                 <ColumnDefinition />
             </Grid.ColumnDefinitions>
             
@@ -45,12 +45,14 @@
                 <TextBlock Margin="5">Work item types:</TextBlock>
                 <TextBlock Margin="5">Build not older than (Days):</TextBlock>
                 <TextBlock Margin="5">Maximun number of builds per definition:</TextBlock>
+                <TextBlock Margin="5">Maximun number of commits per repository:</TextBlock>
                 <TextBlock Margin="5">Use caching:</TextBlock>
             </StackPanel>
             <StackPanel Grid.Row="5" Grid.Column="1">
                 <TextBox Margin="0,5" Grid.Column="1" MinWidth="300" Text="{Binding AzureSettings.WorkItemTypes}" />
                 <TextBox Margin="0,5" Grid.Column="1" MinWidth="300" Text="{Binding AzureSettings.BuildNotOlderThanDays}" />
                 <TextBox Margin="0,5" Grid.Column="1" MinWidth="300" Text="{Binding AzureSettings.MaxBuildsPerDefinition}" />
+                <TextBox Margin="0,5" Grid.Column="1" MinWidth="300" Text="{Binding AzureSettings.MaxCommitsPerRepo}" />
                 <TextBox Margin="0,5" Grid.Column="1" MinWidth="300" Text="{Binding AzureSettings.UseCaching}" />
             </StackPanel>
 
