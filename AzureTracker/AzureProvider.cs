@@ -20,13 +20,14 @@ namespace AzureTracker
         None,
         PR,
         WorkItem,
-        Build
+        Build,
+        Commit
     };
 
     #region Types
     public class AzureObjectBase
     {
-        public int ID { get; set; }
+        public Int64 ID { get; set; }
         public string? ProjectName { get; set; } = string.Empty;
 
         public string? Title { get; set; } = string.Empty;
@@ -85,6 +86,15 @@ namespace AzureTracker
         public DateTime? FinishTime { get; set; }
 		
         public string? PoolName { get; set; } = string.Empty;
+    }
+
+    public class Commit : AzureObjectBase
+    {
+        public string? RepoName { get; set; } = string.Empty;
+
+        public string? CommitID { get; set; } = string.Empty;
+
+        public DateTime? TimeStamp { get; set; }
     }
 
 
@@ -153,17 +163,19 @@ namespace AzureTracker
         readonly string PRCache = Path.Combine(Cache, "PRs");
         readonly string WITCache = Path.Combine(Cache, "WorkItems");
         readonly string BuildCache = Path.Combine(Cache, "Builds");
+        readonly string CommitCache = Path.Combine(Cache, "Commits");
         private void LoadCahcedAzureItems()
         {
             if (Directory.Exists(Cache))
             {
                 LoadFromCache<PR>(PRCache, PRs);
                 LoadFromCache<WorkItem>(WITCache, WorkItems);
-                LoadFromCache<Build>(PRCache, Builds);
+                LoadFromCache<Build>(BuildCache, Builds);
+                LoadFromCache<Commit>(CommitCache, Commits);
             }
         }
 
-        void LoadFromCache<T>(string cacheName, Dictionary<int, AzureObjectBase> dest) where T : AzureObjectBase, new()
+        void LoadFromCache<T>(string cacheName, Dictionary<Int64, AzureObjectBase> dest) where T : AzureObjectBase, new()
         {
             try
             {
@@ -177,7 +189,7 @@ namespace AzureTracker
                             foreach (var item in obj.AsObject().AsEnumerable())
                             {
                                 if (item.Value != null)
-                                    dest[int.Parse(item.Key)] = Parse<T>(item.Value);
+                                    dest[Int64.Parse(item.Key)] = Parse<T>(item.Value);
                             }
                         }
                     }
@@ -225,9 +237,10 @@ namespace AzureTracker
             SaveAzureItems<PR>(PRCache, PRs);
             SaveAzureItems<WorkItem>(WITCache, WorkItems);
             SaveAzureItems<Build>(BuildCache, Builds);
+            SaveAzureItems<Commit>(CommitCache, Commits);
         }
 
-        void SaveAzureItems<T>(string cacheName, Dictionary<int, AzureObjectBase> src) where T : AzureObjectBase 
+        void SaveAzureItems<T>(string cacheName, Dictionary<Int64, AzureObjectBase> src) where T : AzureObjectBase 
         {
             if (src.Count>0)
             {
@@ -258,10 +271,12 @@ namespace AzureTracker
         }
         List<Project?> Projects { get; set; } = new List<Project?>();
 
-        Dictionary<int,AzureObjectBase> PRs { get; set; } = new Dictionary<int, AzureObjectBase>();
-        Dictionary<int, AzureObjectBase> WorkItems { get; set; } = new Dictionary<int, AzureObjectBase>();
+        Dictionary<Int64, AzureObjectBase> PRs { get; set; } = new Dictionary<Int64, AzureObjectBase>();
+        Dictionary<Int64, AzureObjectBase> WorkItems { get; set; } = new Dictionary<Int64, AzureObjectBase>();
 
-        Dictionary<int, AzureObjectBase> Builds { get; set; } = new Dictionary<int, AzureObjectBase>();
+        Dictionary<Int64, AzureObjectBase> Builds { get; set; } = new Dictionary<Int64, AzureObjectBase>();
+
+        Dictionary<Int64, AzureObjectBase> Commits { get; set; } = new Dictionary<Int64, AzureObjectBase>();
 
         public List<AzureObjectBase> Get(AzureObject selectedAzureObject)
         {
@@ -273,6 +288,8 @@ namespace AzureTracker
                     return WorkItems.Values.ToList();
                 case AzureObject.Build:
                     return Builds.Values.ToList();
+                case AzureObject.Commit:
+                    return Commits.Values.ToList();
             }
 
             return new List<AzureObjectBase>();
@@ -292,6 +309,9 @@ namespace AzureTracker
                     Builds = GetBuilds(
                         DateTime.Now.AddDays(-m_APConfig.BuildNotOlderThanDays), 
                         m_APConfig.MaxBuildsPerDefinition);
+                    break;
+                case AzureObject.Commit:
+                    Commits = GetCommits();
                     break;
                 default:
                     foreach (AzureObject ao in (AzureObject[])Enum.GetValues(typeof(AzureObject)))
@@ -360,9 +380,9 @@ namespace AzureTracker
             }
         }
         #region work items
-        private Dictionary<int, AzureObjectBase> GetWorkItems()
+        private Dictionary<Int64, AzureObjectBase> GetWorkItems()
         {
-            Dictionary<int, AzureObjectBase> dicWorkItems = WorkItems;
+            Dictionary<Int64, AzureObjectBase> dicWorkItems = WorkItems;
             for (int i = 0; i < Projects?.Count; ++i)
             {
                 if (Aborting)
@@ -382,13 +402,13 @@ namespace AzureTracker
             return (x.Status != "Verified" && x.Status != "Closed" && x.Status != "Removed");
         }
 
-        private void GetWorkItemsByProject(Dictionary<int, AzureObjectBase> dicWorkItems, Project? p)
+        private void GetWorkItemsByProject(Dictionary<Int64, AzureObjectBase> dicWorkItems, Project? p)
         {
             bool success = false;
 
             const int WIT_PER_CALL = 19999;
 
-            int skip = -1;
+            Int64 skip = -1;
             if (dicWorkItems.Count > 0) //not first time
             {
                 var projWITs = dicWorkItems.Values.Where(x => x.ProjectName == p?.Name).OrderByDescending(x => x.ID);
@@ -406,7 +426,7 @@ namespace AzureTracker
                     {
                         if (Aborting)
                             break;
-                        List<int> lstIDRange = openProjItems.GetRange(i, Math.Min(openProjItems.Count - i, count));
+                        List<Int64> lstIDRange = openProjItems.GetRange(i, Math.Min(openProjItems.Count - i, count));
                         if (lstIDRange?.Count > 0)
                             GetWorkItemsByIDs(dicWorkItems, lstIDRange, true);
                     }
@@ -443,7 +463,7 @@ namespace AzureTracker
                         if (jsonWITs?.Count == 0)
                             break;
 
-                        var lstWitID = new List<int>();
+                        var lstWitID = new List<Int64>();
                         for (int i = 0; i < jsonWITs?.Count; ++i)
                         {
                             JsonNode? jsonWIT = jsonWITs[i];
@@ -462,7 +482,7 @@ namespace AzureTracker
                             if (Aborting)
                                 break;
 
-                            List<int> lstIDRange = lstWitID.GetRange(i, Math.Min(lstWitID.Count - i, count));
+                            List<Int64> lstIDRange = lstWitID.GetRange(i, Math.Min(lstWitID.Count - i, count));
                             if (lstIDRange?.Count > 0)
                                 GetWorkItemsByIDs(dicWorkItems, lstIDRange, false);
                         }
@@ -475,8 +495,10 @@ namespace AzureTracker
             }
         }
 
-        private void GetWorkItemsByIDs(Dictionary<int, AzureObjectBase> dicWorkItems, List<int> witIDs, bool bUpdate)
+        private void GetWorkItemsByIDs(Dictionary<Int64, AzureObjectBase> dicWorkItems, List<Int64> witIDs, bool bUpdate)
         {
+            Logger.Instance.Info($"GetWorkItemsByIDs => range {witIDs.Min()} - {witIDs.Max()}");
+
             string witStrIDs = string.Empty;
             foreach (int? id in witIDs)
             {
@@ -576,10 +598,105 @@ namespace AzureTracker
 
         #endregion
 
-        #region PR
-        private Dictionary<int, AzureObjectBase> GetPRs(PullRequestStatus status)
+        #region Commits
+
+        private Dictionary<Int64, AzureObjectBase> GetCommits()
         {
-            Dictionary<int, AzureObjectBase> dicPRs = PRs;
+            Dictionary<Int64, AzureObjectBase> dicCommits = new Dictionary<Int64, AzureObjectBase>();
+            for (int i = 0; i < Projects?.Count; ++i)
+            {
+                if (Aborting)
+                    return Commits;
+
+                DataFetchEvent?.Invoke(AzureObject.Commit, Projects[i]?.Name, "in progress");
+                var dt = DateTime.Now;
+                GetCommitsByProject(dicCommits, Projects[i]);
+                DataFetchEvent?.Invoke(AzureObject.Commit, Projects[i]?.Name, $"took {(DateTime.Now - dt).TotalSeconds}");
+            }
+
+            return dicCommits;
+        }
+
+        private void GetCommitsByProject(Dictionary<Int64, AzureObjectBase> dicCommits, Project? project)
+        {
+            for (int i = 0; i < project?.Repos.Count; ++i)
+            {
+                if (Aborting)
+                    break;
+
+                GetCommitsByProjectAndRepo(dicCommits, project.Name, project.Repos[i]);
+            }
+        }
+
+        private void GetCommitsByProjectAndRepo(Dictionary<Int64, AzureObjectBase> dicCommits, string? p, string? r)
+        {
+            //GET https://dev.azure.com/{organization}/{project}/_apis/git/repositories/{repositoryId}/commits?api-version=7.1
+
+            string sResponse = string.Empty;
+            string uri =
+                $"{AzureEndPoint}/{p}/_apis/git/repositories/{r}/commits?&searchCriteria.$top={100}&{API_VERSION}";
+
+            if (AzureGetRequest(uri, out sResponse))
+            {
+                JsonNode? json = JsonNode.Parse(sResponse);
+
+                if (json != null)
+                {
+                    ParseCommits(dicCommits, json, p, r);
+                }
+            }
+            else
+            {
+                throw new Exception($"GetCommitsByProjectAndRepo => {sResponse}");
+            }
+        }
+
+        static int idx = 1;
+        private void ParseCommits(Dictionary<Int64, AzureObjectBase> dicCommits, JsonNode jsonCommit, string? p, string? r)
+        {
+            JsonArray? jsonCommits = jsonCommit?["value"]?.AsArray();
+            for (int j = 0; j < jsonCommits?.Count; ++j)
+            {
+                Commit commit = new Commit();
+
+                var id = jsonCommits[j]?["commitId"]?.GetValue<string>();
+                if (!string.IsNullOrWhiteSpace(id))
+                {
+                    commit.ID = Int64.Parse(id.Substring(id.Length-8), System.Globalization.NumberStyles.HexNumber);
+                    commit.CommitID = id;
+                    commit.ProjectName = p;
+                    commit.RepoName = r;
+                    commit.CreatedBy = jsonCommits[j]?["committer"]?["name"]?.ToString();
+                    commit.Title = jsonCommits[j]?["comment"]?.ToString();
+                    commit.TimeStamp = jsonCommits[j]?["committer"]?["date"]?.GetValue<DateTime>();
+                    commit.Status = $"Add:{jsonCommits[j]?["changeCounts"]?["Add"]?.ToString()}" +
+                        $", Edit: {jsonCommits[j]?["changeCounts"]?["Edit"]?.ToString()}" +
+                        $", Delete: {jsonCommits[j]?["changeCounts"]?["Delete"]?.ToString()}";
+                    var uri = jsonCommits[j]?["remoteUrl"]?.ToString();
+
+                    if (!string.IsNullOrWhiteSpace(uri))
+                        commit.Uri = new UriBuilder(uri).Uri;
+
+                    while(dicCommits.ContainsKey(commit.ID))
+                    {
+                        Logger.Instance.Warn($"Commit ID {commit.ID} already exists. generating new...");
+                        commit.ID++;
+                    }
+                    dicCommits[commit.ID] = commit;
+                }
+                else
+                {
+                    throw new Exception($"ParseCommits => commitid is invalid");
+                }
+            }
+        }
+
+        #endregion
+
+        #region PR
+        private Dictionary<Int64, AzureObjectBase> GetPRs(PullRequestStatus status)
+        {
+            Dictionary<Int64, AzureObjectBase> dicPRs = PRs;
             for (int i = 0; i < Projects.Count; ++i)
             {
                 if (Aborting)
@@ -594,11 +711,11 @@ namespace AzureTracker
             return dicPRs;
         }
 
-        private void GetPRsByProject(Dictionary<int, AzureObjectBase> dicPRs, Project? p, PullRequestStatus status)
+        private void GetPRsByProject(Dictionary<Int64, AzureObjectBase> dicPRs, Project? p, PullRequestStatus status)
         {
             const int PRS_PER_CALL = 101;
             int skip = 0;
-            HashSet<int>? activePRs = null;
+            HashSet<Int64>? activePRs = null;
             if (status == PullRequestStatus.Active)
             {
                 string sActive = PullRequestStatus.Active.ToString().ToLower();
@@ -711,9 +828,9 @@ namespace AzureTracker
 
         #region Build
 
-        private Dictionary<int, AzureObjectBase> GetBuilds(DateTime earliestCreateDate, int maxBuildsPerDefinition)
+        private Dictionary<Int64, AzureObjectBase> GetBuilds(DateTime earliestCreateDate, int maxBuildsPerDefinition)
         {
-            Dictionary<int, AzureObjectBase> dicBuilds = new Dictionary<int, AzureObjectBase>();
+            Dictionary<Int64, AzureObjectBase> dicBuilds = new Dictionary<Int64, AzureObjectBase>();
             for (int i = 0; i < Projects?.Count; ++i)
             {
                 if (Aborting)
@@ -738,7 +855,7 @@ namespace AzureTracker
             }
             return false;
         }
-        private void GetBuildsByProject(Dictionary<int, AzureObjectBase> dicBuilds, Project? p, 
+        private void GetBuildsByProject(Dictionary<Int64, AzureObjectBase> dicBuilds, Project? p, 
             DateTime earliestCreateDate, int maxBuildsPerDefinition)
         {
             string sResponse = string.Empty;
@@ -865,7 +982,7 @@ namespace AzureTracker
             if (AzureGetRequest(uri, out sResponse))
             {
                 AzureObjectBase? updatedAob = null;
-                Dictionary<int, AzureObjectBase>? dic = null;
+                Dictionary<Int64, AzureObjectBase>? dic = null;
                 JsonNode? jsonNode = JsonNode.Parse(sResponse);
                 if (aob is PR)
                 {
