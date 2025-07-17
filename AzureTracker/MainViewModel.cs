@@ -331,16 +331,24 @@ namespace AzureTracker
 
         private JsonNode? FilterByAzureObject(JsonArray? jsonFiltersArray, AzureObject ao)
         {
+            string type = ao.ToString();
             JsonNode? typeFilter = null;
             for (int i = 0; i < jsonFiltersArray?.Count; ++i)
             {
                 JsonNode? jsonFilter = jsonFiltersArray[i];
                 var typeJson = jsonFilter?["type"]?.ToString();
-                if (string.Compare(ao.ToString(), typeJson) == 0)
+                if (string.Compare(type, typeJson) == 0)
                 {
                     typeFilter = jsonFilter;
                     break;
                 }
+            }
+
+            if (typeFilter == null)
+            {
+                string node = $"{{\"type\":\"{type}\",\"fields\": []}}";
+                typeFilter = JsonNode.Parse(node);
+                jsonFiltersArray?.Add(typeFilter);
             }
 
             return typeFilter;
