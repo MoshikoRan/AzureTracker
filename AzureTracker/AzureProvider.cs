@@ -17,11 +17,11 @@ namespace AzureTracker
 {
     public enum AzureObject
     {
-        None,
         PR,
         WorkItem,
         Build,
-        Commit
+        Commit,
+        None
     };
 
     #region Types

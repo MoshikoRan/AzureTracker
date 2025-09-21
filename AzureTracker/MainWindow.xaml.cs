@@ -4,6 +4,7 @@ using CefSharp.Wpf;
 using CefSharp.Wpf.Handler;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -25,7 +26,46 @@ namespace AzureTracker
             if (vm != null)
             {
                 CreateTabItems();
+                UpdateCustomFilters();
+                vm.PropertyChanged += OnPropertyChanged;
             }
+        }
+
+        private void OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == "CustomFilters")
+            {
+                UpdateCustomFilters();
+            }
+        }
+
+        private void UpdateCustomFilters()
+        {
+            CUSTOM_FILTERS.Items.Clear();
+            var vm = DataContext as MainViewModel;
+            if (vm != null && vm.CustomFilters != null
+                && vm.CustomFilters.ContainsKey(vm.SelectedAzureObject))
+            {
+                foreach (var filter in vm.CustomFilters[vm.SelectedAzureObject])
+                {
+                    MenuItem item = new MenuItem();
+                    item.Header = filter;
+                    item.Click += CustomFilterMenuItem_Click;
+                    CUSTOM_FILTERS.Items.Add(item);
+                }
+            }
+            //<MenuItem Header="Add Custom Filter" Command="{Binding CmdAddCustomFilter}" />
+            CUSTOM_FILTERS.Items.Add(new MenuItem()
+            {
+                Header = "Add Custom Filter",
+                Command = vm?.CmdAddCustomFilter
+            });
+        }
+
+        private void CustomFilterMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            var vm = DataContext as MainViewModel;
+            vm?.SetCustomFilter((sender as MenuItem).Header.ToString());
         }
 
         private void CreateTabItems()

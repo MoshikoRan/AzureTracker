@@ -48,6 +48,7 @@
                         <MenuItem Header="Default Filter" Command="{Binding CmdResetFilter}" IsEnabled="{Binding EnableSelection}"/>
                         <MenuItem Header="Reset Tab View" Click="ResetView_Click" IsEnabled="{Binding EnableSelection}"/>
                         <MenuItem Header="Set As Default Filter" Command="{Binding CmdSetDefaultFilter}" IsEnabled="{Binding EnableSelection}"/>
+                        <MenuItem Header="Custom Filters" x:Name="CUSTOM_FILTERS"/>
                     </MenuItem>
                     <Separator />
                     <MenuItem Header="View Log" Click="ViewLog_Click"/>

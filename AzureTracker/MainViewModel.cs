@@ -1,6 +1,7 @@
 ﻿using AzureTracker.Properties;
 using AzureTracker.Utils;
 using CefSharp;
+using Microsoft.TeamFoundation.Build.WebApi;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -14,6 +15,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
 using static AzureTracker.AzureProvider;
+using static AzureTracker.Utils.CommandHandler;
 
 namespace AzureTracker
 {
@@ -402,6 +404,105 @@ namespace AzureTracker
                 Settings.Default.Save();
                 m_jsonDefaultFilters = def.AsArray();
                 ResetFilters();
+            }
+        }
+
+        public Dictionary<AzureObject, List<string>> CustomFilters
+        {
+            get;
+        } = new Dictionary<AzureObject, List<string>>();
+
+        internal void SetCustomFilter(string? filterName)
+        {
+            var obj = JsonObject.Parse(Settings.Default?.CustomFilters).AsObject();
+            ResetFilterByJsonFilter(SelectedAzureObject, obj[CUSTOMFILTERS_KEY][SelectedAzureObject.ToString()][filterName]);
+            AzureObjectVMDictionary[SelectedAzureObject].RefreshView();
+        }
+
+        ICommand? m_cmdAddCustomFilter = null;
+        public ICommand CmdAddCustomFilter
+        {
+            get
+            {
+                if (m_cmdAddCustomFilter == null)
+                {
+                    m_cmdAddCustomFilter = new CommandHandler(
+                        new Action(AddCustomFilter));
+                }
+                return m_cmdAddCustomFilter;
+            }
+        }
+
+        static int filteridx = 0;
+        private void AddCustomFilter()
+        {
+            //open dialog to get filter name
+            //var inputDialog = new InputDialog("Enter filter name:", "Add Custom Filter");
+            //if (inputDialog.ShowDialog() == true)
+            {
+                var filterName = "filter" + filteridx.ToString(); //inputDialog.ResponseText;
+                if (!string.IsNullOrWhiteSpace(filterName))
+                {
+                    AddCustomFilter(filterName, SelectedAzureObject);
+                }
+                filteridx++;
+            }
+        }
+
+        const string CUSTOMFILTERS_KEY = "customfilters";
+        private void AddCustomFilter(string filterName, AzureObject azureObject)
+        {
+            JsonObject obj = null;
+            string azureObjStr = azureObject.ToString();
+
+            if (!string.IsNullOrWhiteSpace(Settings.Default?.CustomFilters))
+            {
+                obj = JsonObject.Parse(Settings.Default?.CustomFilters).AsObject();
+            }
+            else
+            {
+                obj = new JsonObject();
+                obj[CUSTOMFILTERS_KEY] = new JsonObject();
+            }
+
+            if (!obj[CUSTOMFILTERS_KEY].AsObject().ContainsKey(azureObjStr))
+            {
+                obj[CUSTOMFILTERS_KEY][azureObjStr] = new JsonObject();
+            }
+
+            var def = obj[CUSTOMFILTERS_KEY][azureObjStr][filterName] = FilterByAzureObject(m_jsonCurrentFilters, azureObject)?.DeepClone();
+            if (def != null)
+            {
+                Settings.Default.CustomFilters = obj.ToJsonString();
+                Settings.Default.Save();
+
+                if (!CustomFilters.ContainsKey(azureObject))
+                    CustomFilters[azureObject] = new List<string>();
+
+                if (!CustomFilters[azureObject].Contains(filterName))
+                    CustomFilters[azureObject].Add(filterName);
+
+                OnPropertyChanged(nameof(CustomFilters));
+            }
+        }
+
+        private void RemoveCustomFilter(string filterName, AzureObject azureObject)
+        {
+            JsonObject obj = JsonObject.Parse(Settings.Default?.CustomFilters).AsObject();
+            var def = obj[CUSTOMFILTERS_KEY]?[azureObject.ToString()]?.AsObject();
+            if (def != null && def.ContainsKey(filterName))
+            {
+                def.Remove(filterName);
+                Settings.Default.CustomFilters = obj.ToJsonString();
+                Settings.Default.Save();
+
+                if (CustomFilters.ContainsKey(azureObject))
+                {
+                    if (CustomFilters[azureObject].Contains(filterName))
+                        CustomFilters[azureObject].Remove(filterName);
+
+                    OnPropertyChanged(nameof(CustomFilters));
+                }
             }
         }
 
