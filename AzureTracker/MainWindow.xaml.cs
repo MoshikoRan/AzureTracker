@@ -26,7 +26,6 @@ namespace AzureTracker
             if (vm != null)
             {
                 CreateTabItems();
-                UpdateCustomFilters();
                 vm.PropertyChanged += OnPropertyChanged;
             }
         }
@@ -51,6 +50,14 @@ namespace AzureTracker
                     MenuItem item = new MenuItem();
                     item.Header = filter;
                     item.Click += CustomFilterMenuItem_Click;
+                    item.ContextMenu = new ContextMenu();
+
+                    var removeItem = new MenuItem();
+                    removeItem.Header = "Remove";
+                    removeItem.Tag = filter;
+                    removeItem.Click += CustomFilterRemoveItem_Click;
+
+                    item.ContextMenu.Items.Add(removeItem);
                     CUSTOM_FILTERS.Items.Add(item);
                 }
             }
@@ -60,6 +67,12 @@ namespace AzureTracker
                 Header = "Add Custom Filter",
                 Command = vm?.CmdAddCustomFilter
             });
+        }
+
+        private void CustomFilterRemoveItem_Click(object sender, RoutedEventArgs e)
+        {
+            var vm = DataContext as MainViewModel;
+            vm?.RemoveCustomFilter((sender as MenuItem).Tag.ToString());
         }
 
         private void CustomFilterMenuItem_Click(object sender, RoutedEventArgs e)
@@ -123,6 +136,7 @@ namespace AzureTracker
                         if (header != null)
                         {
                             vm.SelectedAzureObject = Enum.Parse<AzureObject>(header);
+                            UpdateCustomFilters();
                         }
                     }
                 }
@@ -507,3 +521,4 @@ internal class ChromeTabMenuHandler : ContextMenuHandler
         }
     }
 }
+
