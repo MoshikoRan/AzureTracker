@@ -433,19 +433,16 @@ namespace AzureTracker
             }
         }
 
-        static int filteridx = 0;
         private void AddCustomFilter()
         {
-            //open dialog to get filter name
-            //var inputDialog = new InputDialog("Enter filter name:", "Add Custom Filter");
-            //if (inputDialog.ShowDialog() == true)
+            var customFilterWindow = new CustomFilterWindow();
+
+            if (customFilterWindow.ShowDialog().Value)
             {
-                var filterName = "filter" + filteridx.ToString(); //inputDialog.ResponseText;
-                if (!string.IsNullOrWhiteSpace(filterName))
+                if (!string.IsNullOrWhiteSpace(customFilterWindow.CustomFilterName))
                 {
-                    AddCustomFilter(filterName, SelectedAzureObject);
+                    AddCustomFilter(customFilterWindow.CustomFilterName, SelectedAzureObject);
                 }
-                filteridx++;
             }
         }
 
