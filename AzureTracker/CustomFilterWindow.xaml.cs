@@ -28,7 +28,7 @@ namespace AzureTracker
         public string CustomFilterName
         {
             get; set;
-        }
+        } = string.Empty;
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {

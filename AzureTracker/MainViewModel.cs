@@ -415,15 +415,25 @@ namespace AzureTracker
 
         internal void SetCustomFilter(string? filterName)
         {
-            ResetFilterByJsonFilter(SelectedAzureObject, 
-                m_jsonCustomFilters?[CUSTOMFILTERS_KEY]?[SelectedAzureObject.ToString()][filterName]);
-            AzureObjectVMDictionary[SelectedAzureObject].RefreshView();
+            if (filterName != null)
+            {
+                var azureObjStr = SelectedAzureObject.ToString();
+                if (azureObjStr != null)
+                {
+                    ResetFilterByJsonFilter(SelectedAzureObject,
+                        m_jsonCustomFilters?[CUSTOMFILTERS_KEY]?[azureObjStr]?[filterName]);
+                    AzureObjectVMDictionary[SelectedAzureObject].RefreshView();
+                }
+            }
         }
 
         internal void RemoveCustomFilter(string? filterName)
         {
-            RemoveCustomFilter(filterName, SelectedAzureObject);
-            OnPropertyChanged(nameof(CustomFilters));
+            if (filterName != null)
+            {
+                RemoveCustomFilter(filterName, SelectedAzureObject);
+                OnPropertyChanged(nameof(CustomFilters));
+            }
         }
 
         ICommand? m_cmdAddCustomFilter = null;
@@ -442,9 +452,9 @@ namespace AzureTracker
 
         private void AddCustomFilter()
         {
-            var customFilterWindow = new CustomFilterWindow();
-
-            if (customFilterWindow.ShowDialog().Value)
+            CustomFilterWindow customFilterWindow = new();
+            var res = customFilterWindow.ShowDialog();
+            if (res.HasValue && res.Value)
             {
                 if (!string.IsNullOrWhiteSpace(customFilterWindow.CustomFilterName))
                 {
@@ -456,20 +466,22 @@ namespace AzureTracker
         const string CUSTOMFILTERS_KEY = "customfilters";
         private void AddCustomFilter(string filterName, AzureObject azureObject)
         {
-            string azureObjStr = azureObject.ToString();
+            var azureObjStr = azureObject.ToString();
             JsonObject obj = m_jsonCustomFilters;
 
             var filters = obj[CUSTOMFILTERS_KEY];
-            if (filters != null)
+            if (filters != null && azureObjStr != null)
             {
                 if (!filters.AsObject().ContainsKey(azureObjStr))
                 {
                     filters[azureObjStr] = new JsonObject();
                 }
 
-                var def = filters[azureObjStr][filterName] = FilterByAzureObject(m_jsonCurrentFilters, azureObject)?.DeepClone();
-                if (def != null)
+                var filter = filters[azureObjStr];
+                var def = FilterByAzureObject(m_jsonCurrentFilters, azureObject)?.DeepClone();
+                if (def != null && filter != null)
                 {
+                    filter[filterName] = def;
                     Settings.Default.CustomFilters = obj.ToJsonString();
                     Settings.Default.Save();
 

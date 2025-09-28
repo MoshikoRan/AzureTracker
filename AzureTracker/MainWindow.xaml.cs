@@ -71,14 +71,22 @@ namespace AzureTracker
 
         private void CustomFilterRemoveItem_Click(object sender, RoutedEventArgs e)
         {
-            var vm = DataContext as MainViewModel;
-            vm?.RemoveCustomFilter((sender as MenuItem).Tag.ToString());
+            var menuItem = sender as MenuItem;
+            if (menuItem != null)
+            {
+                var vm = DataContext as MainViewModel;
+                vm?.RemoveCustomFilter(menuItem.Tag.ToString());
+            }
         }
 
         private void CustomFilterMenuItem_Click(object sender, RoutedEventArgs e)
         {
-            var vm = DataContext as MainViewModel;
-            vm?.SetCustomFilter((sender as MenuItem).Header.ToString());
+            var menuItem = sender as MenuItem;
+            if (menuItem != null)
+            {
+                var vm = DataContext as MainViewModel;
+                vm?.SetCustomFilter(menuItem.Header.ToString());
+            }
         }
 
         private void CreateTabItems()
