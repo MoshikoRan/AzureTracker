@@ -4,6 +4,7 @@ using CefSharp.Wpf;
 using CefSharp.Wpf.Handler;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -25,6 +26,66 @@ namespace AzureTracker
             if (vm != null)
             {
                 CreateTabItems();
+                vm.PropertyChanged += OnPropertyChanged;
+            }
+        }
+
+        private void OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == "CustomFilters")
+            {
+                UpdateCustomFilters();
+            }
+        }
+
+        private void UpdateCustomFilters()
+        {
+            CUSTOM_FILTERS.Items.Clear();
+            var vm = DataContext as MainViewModel;
+            if (vm != null && vm.CustomFilters != null
+                && vm.CustomFilters.ContainsKey(vm.SelectedAzureObject))
+            {
+                foreach (var filter in vm.CustomFilters[vm.SelectedAzureObject])
+                {
+                    MenuItem item = new MenuItem();
+                    item.Header = filter;
+                    item.Click += CustomFilterMenuItem_Click;
+                    item.ContextMenu = new ContextMenu();
+
+                    var removeItem = new MenuItem();
+                    removeItem.Header = "Remove";
+                    removeItem.Tag = filter;
+                    removeItem.Click += CustomFilterRemoveItem_Click;
+
+                    item.ContextMenu.Items.Add(removeItem);
+                    CUSTOM_FILTERS.Items.Add(item);
+                }
+            }
+            //<MenuItem Header="Add Custom Filter" Command="{Binding CmdAddCustomFilter}" />
+            CUSTOM_FILTERS.Items.Add(new MenuItem()
+            {
+                Header = "Add Custom Filter",
+                Command = vm?.CmdAddCustomFilter
+            });
+        }
+
+        private void CustomFilterRemoveItem_Click(object sender, RoutedEventArgs e)
+        {
+            var menuItem = sender as MenuItem;
+            if (menuItem != null)
+            {
+                var vm = DataContext as MainViewModel;
+                vm?.RemoveCustomFilter(menuItem.Tag.ToString());
+            }
+        }
+
+        private void CustomFilterMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            var menuItem = sender as MenuItem;
+            if (menuItem != null)
+            {
+                var vm = DataContext as MainViewModel;
+                vm?.SetCustomFilter(menuItem.Header.ToString());
             }
         }
 
@@ -83,6 +144,7 @@ namespace AzureTracker
                         if (header != null)
                         {
                             vm.SelectedAzureObject = Enum.Parse<AzureObject>(header);
+                            UpdateCustomFilters();
                         }
                     }
                 }
@@ -467,3 +529,4 @@ internal class ChromeTabMenuHandler : ContextMenuHandler
         }
     }
 }
+

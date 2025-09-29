@@ -1,6 +1,7 @@
 ﻿using AzureTracker.Properties;
 using AzureTracker.Utils;
 using CefSharp;
+using Microsoft.TeamFoundation.Build.WebApi;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -14,6 +15,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
 using static AzureTracker.AzureProvider;
+using static AzureTracker.Utils.CommandHandler;
 
 namespace AzureTracker
 {
@@ -51,6 +53,7 @@ namespace AzureTracker
                     m_azureProvider.DataFetchEvent += AzureProveiderDataFetchHandler;
 
                     ResetFilters();
+                    ParseCustomFilters();
                     Sync(AzureObject.None);
                 }
                 else
@@ -331,16 +334,24 @@ namespace AzureTracker
 
         private JsonNode? FilterByAzureObject(JsonArray? jsonFiltersArray, AzureObject ao)
         {
+            string type = ao.ToString();
             JsonNode? typeFilter = null;
             for (int i = 0; i < jsonFiltersArray?.Count; ++i)
             {
                 JsonNode? jsonFilter = jsonFiltersArray[i];
                 var typeJson = jsonFilter?["type"]?.ToString();
-                if (string.Compare(ao.ToString(), typeJson) == 0)
+                if (string.Compare(type, typeJson) == 0)
                 {
                     typeFilter = jsonFilter;
                     break;
                 }
+            }
+
+            if (typeFilter == null)
+            {
+                string node = $"{{\"type\":\"{type}\",\"fields\": []}}";
+                typeFilter = JsonNode.Parse(node);
+                jsonFiltersArray?.Add(typeFilter);
             }
 
             return typeFilter;
@@ -394,6 +405,156 @@ namespace AzureTracker
                 Settings.Default.Save();
                 m_jsonDefaultFilters = def.AsArray();
                 ResetFilters();
+            }
+        }
+
+        public Dictionary<AzureObject, List<string>> CustomFilters
+        {
+            get;
+        } = new Dictionary<AzureObject, List<string>>();
+
+        internal void SetCustomFilter(string? filterName)
+        {
+            if (filterName != null)
+            {
+                var azureObjStr = SelectedAzureObject.ToString();
+                if (azureObjStr != null)
+                {
+                    ResetFilterByJsonFilter(SelectedAzureObject,
+                        m_jsonCustomFilters?[CUSTOMFILTERS_KEY]?[azureObjStr]?[filterName]);
+                    AzureObjectVMDictionary[SelectedAzureObject].RefreshView();
+                }
+            }
+        }
+
+        internal void RemoveCustomFilter(string? filterName)
+        {
+            if (filterName != null)
+            {
+                RemoveCustomFilter(filterName, SelectedAzureObject);
+                OnPropertyChanged(nameof(CustomFilters));
+            }
+        }
+
+        ICommand? m_cmdAddCustomFilter = null;
+        public ICommand CmdAddCustomFilter
+        {
+            get
+            {
+                if (m_cmdAddCustomFilter == null)
+                {
+                    m_cmdAddCustomFilter = new CommandHandler(
+                        new Action(AddCustomFilter));
+                }
+                return m_cmdAddCustomFilter;
+            }
+        }
+
+        private void AddCustomFilter()
+        {
+            CustomFilterWindow customFilterWindow = new();
+            var res = customFilterWindow.ShowDialog();
+            if (res.HasValue && res.Value)
+            {
+                if (!string.IsNullOrWhiteSpace(customFilterWindow.CustomFilterName))
+                {
+                    AddCustomFilter(customFilterWindow.CustomFilterName, SelectedAzureObject);
+                }
+            }
+        }
+
+        const string CUSTOMFILTERS_KEY = "customfilters";
+        private void AddCustomFilter(string filterName, AzureObject azureObject)
+        {
+            var azureObjStr = azureObject.ToString();
+            JsonObject obj = m_jsonCustomFilters;
+
+            var filters = obj[CUSTOMFILTERS_KEY];
+            if (filters != null && azureObjStr != null)
+            {
+                if (!filters.AsObject().ContainsKey(azureObjStr))
+                {
+                    filters[azureObjStr] = new JsonObject();
+                }
+
+                var filter = filters[azureObjStr];
+                var def = FilterByAzureObject(m_jsonCurrentFilters, azureObject)?.DeepClone();
+                if (def != null && filter != null)
+                {
+                    filter[filterName] = def;
+                    Settings.Default.CustomFilters = obj.ToJsonString();
+                    Settings.Default.Save();
+
+                    AddToCustomFiltersDictionaty(filterName, azureObject);
+                    OnPropertyChanged(nameof(CustomFilters));
+                }
+            }
+        }
+
+        private void AddToCustomFiltersDictionaty(string filterName, AzureObject azureObject)
+        {
+            if (!CustomFilters.ContainsKey(azureObject))
+                CustomFilters[azureObject] = new List<string>();
+
+            if (!CustomFilters[azureObject].Contains(filterName))
+                CustomFilters[azureObject].Add(filterName);
+        }
+
+        private void RemoveCustomFilter(string filterName, AzureObject azureObject)
+        {
+            var obj = m_jsonCustomFilters;
+            var def = obj[CUSTOMFILTERS_KEY]?[azureObject.ToString()]?.AsObject();
+            if (def != null && def.ContainsKey(filterName))
+            {
+                def.Remove(filterName);
+                Settings.Default.CustomFilters = obj.ToJsonString();
+                Settings.Default.Save();
+
+                if (CustomFilters.ContainsKey(azureObject))
+                {
+                    if (CustomFilters[azureObject].Contains(filterName))
+                        CustomFilters[azureObject].Remove(filterName);
+
+                    OnPropertyChanged(nameof(CustomFilters));
+                }
+            }
+        }
+
+        JsonObject m_jsonCustomFilters = new JsonObject();
+        private void ParseCustomFilters()
+        {
+            if (!string.IsNullOrWhiteSpace(Settings.Default?.CustomFilters))
+            {
+                var filters = Settings.Default?.CustomFilters;
+                if (filters != null)
+                {
+                    var jsonFilters = JsonObject.Parse(filters);
+                    if (jsonFilters != null)
+                        m_jsonCustomFilters = jsonFilters.AsObject();
+                }
+            }
+            else
+            {
+                m_jsonCustomFilters[CUSTOMFILTERS_KEY] = new JsonObject();
+            }
+            var obj = m_jsonCustomFilters;
+            var filterDict = obj[CUSTOMFILTERS_KEY];
+
+            if (filterDict != null)
+            {
+                foreach (var filterlist in filterDict.AsObject())
+                {
+                    var val = filterlist.Value;
+                    if (val != null)
+                    {
+                        foreach (var filter in val.AsObject())
+                        {
+                            // filterlist.Key = AzureObject, filter.Key = filter name
+                            AddToCustomFiltersDictionaty(filter.Key, Enum.Parse<AzureObject>(filterlist.Key));
+                        }
+                    }
+                }
+                OnPropertyChanged(nameof(CustomFilters));
             }
         }
 
