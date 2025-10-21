@@ -438,11 +438,11 @@ namespace AzureTracker
                 GetWorkItemsByProject(dicWorkItems, Projects?[i]);
                 DataFetchEvent?.Invoke(AzureObject.WorkItem, Projects?[i]?.Name, $"took {(DateTime.Now - dt).TotalSeconds} seconds");
             }
-            LastWITUpdate = DateTime.Now;
+            WITUpdateFromDate = DateTime.Now;
             return dicWorkItems;
         }
 
-        private DateTime LastWITUpdate = DateTime.Now.AddDays(-30);
+        private DateTime WITUpdateFromDate = DateTime.Now.AddDays(-30);
 
         private void GetWorkItemsByProject(Dictionary<Int64, AzureObjectBase> dicWorkItems, Project? p)
         {
@@ -505,7 +505,7 @@ namespace AzureTracker
             }
 
             //update changed items per project
-            hsWitID.AddRange(GetLatestWITChanges(p?.Name, LastWITUpdate));
+            hsWitID.AddRange(GetLatestWITChanges(p?.Name, WITUpdateFromDate));
 
             if (hsWitID.Count > 0)
             {
