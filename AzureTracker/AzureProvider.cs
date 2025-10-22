@@ -73,6 +73,8 @@ namespace AzureTracker
         public string? IsDraft { get; internal set; } = string.Empty;
 
         public DateTime? CreatedDate { get; set; }
+
+        public DateTime? ChangeDate { get; set; }
     }
 
     public class Build : AzureObjectBase 
@@ -669,31 +671,35 @@ namespace AzureTracker
             }
         }
 
+        private Commit GetCommitByID(string? p, string? r, string commitID)
+        {
+            //GET https://dev.azure.com/{organization}/{project}/_apis/git/repositories/{repositoryId}/commits/{commitId}?api-version=7.1
+            string sResponse = string.Empty;
+            string uri =
+                $"{AzureEndPoint}/{p}/_apis/git/repositories/{r}/commits/{commitID}?{API_VERSION}";
+            if (AzureGetRequest(uri, out sResponse))
+            {
+                JsonNode? json = JsonNode.Parse(sResponse);
+                if (json != null)
+                {
+                    return ParseCommit(json, p, r);
+                }
+            }
+            else
+            {
+                throw new Exception($"GetCommitByID => {sResponse}");
+            }
+            return new Commit();
+        }
+
         private void ParseCommits(Dictionary<Int64, AzureObjectBase> dicCommits, JsonNode jsonCommit, string? p, string? r)
         {
             JsonArray? jsonCommits = jsonCommit?["value"]?.AsArray();
             for (int j = 0; j < jsonCommits?.Count; ++j)
             {
-                Commit commit = new Commit();
-
-                var id = jsonCommits[j]?["commitId"]?.GetValue<string>();
-                if (!string.IsNullOrWhiteSpace(id))
+                Commit commit = ParseCommit(jsonCommits[j], p, r);
+                if (!string.IsNullOrWhiteSpace(commit.CommitID))
                 {
-                    commit.ID = Int64.Parse(id.Substring(id.Length-8), System.Globalization.NumberStyles.HexNumber);
-                    commit.CommitID = id;
-                    commit.ProjectName = p;
-                    commit.RepoName = r;
-                    commit.CreatedBy = jsonCommits[j]?["committer"]?["name"]?.ToString();
-                    commit.Title = jsonCommits[j]?["comment"]?.ToString();
-                    commit.TimeStamp = jsonCommits[j]?["committer"]?["date"]?.GetValue<DateTime>();
-                    commit.Status = $"Add:{jsonCommits[j]?["changeCounts"]?["Add"]?.ToString()}" +
-                        $", Edit: {jsonCommits[j]?["changeCounts"]?["Edit"]?.ToString()}" +
-                        $", Delete: {jsonCommits[j]?["changeCounts"]?["Delete"]?.ToString()}";
-                    var uri = jsonCommits[j]?["remoteUrl"]?.ToString();
-
-                    if (!string.IsNullOrWhiteSpace(uri))
-                        commit.Uri = new UriBuilder(uri).Uri;
-
                     while(dicCommits.ContainsKey(commit.ID))
                     {
                         Logger.Instance.Warn($"Commit ID {commit.ID} already exists. generating new...");
@@ -706,6 +712,32 @@ namespace AzureTracker
                     throw new Exception($"ParseCommits => commitid is invalid");
                 }
             }
+        }
+
+        Commit ParseCommit(JsonNode? jsonCommit, string? p, string? r)
+        {
+            Commit commit = new Commit();
+
+            var id = jsonCommit?["commitId"]?.GetValue<string>();
+            if (!string.IsNullOrWhiteSpace(id))
+            {
+                commit.ID = Int64.Parse(id.Substring(id.Length - 8), System.Globalization.NumberStyles.HexNumber);
+                commit.CommitID = id;
+                commit.ProjectName = p;
+                commit.RepoName = r;
+                commit.CreatedBy = jsonCommit?["committer"]?["name"]?.ToString();
+                commit.Title = jsonCommit?["comment"]?.ToString();
+                commit.TimeStamp = jsonCommit?["committer"]?["date"]?.GetValue<DateTime>();
+                commit.Status = $"Add:{jsonCommit?["changeCounts"]?["Add"]?.ToString()}" +
+                    $", Edit: {jsonCommit?["changeCounts"]?["Edit"]?.ToString()}" +
+                    $", Delete: {jsonCommit?["changeCounts"]?["Delete"]?.ToString()}";
+                var uri = jsonCommit?["remoteUrl"]?.ToString();
+
+                if (!string.IsNullOrWhiteSpace(uri))
+                    commit.Uri = new UriBuilder(uri).Uri;
+            }
+
+            return commit;
         }
 
         #endregion
@@ -728,6 +760,8 @@ namespace AzureTracker
             return dicPRs;
         }
 
+        readonly string PR_ACTIVE = PullRequestStatus.Active.ToString().ToLower();
+
         private void GetPRsByProject(Dictionary<Int64, AzureObjectBase> dicPRs, Project? p, PullRequestStatus status)
         {
             const int PRS_PER_CALL = 101;
@@ -735,9 +769,8 @@ namespace AzureTracker
             HashSet<Int64>? activePRs = null;
             if (status == PullRequestStatus.Active)
             {
-                string sActive = PullRequestStatus.Active.ToString().ToLower();
                 activePRs = PRs.Where(
-                    pr => pr.Value.Status == sActive &&
+                    pr => pr.Value.Status == PR_ACTIVE &&
                     pr.Value.ProjectName == p?.Name)
                     .Select(p => p.Value.ID).ToHashSet();
             }
@@ -831,6 +864,17 @@ namespace AzureTracker
 
             pr.IsDraft = jsonPR?["isDraft"]?.ToString();
             //pr.ChangedDate = jsonWIT["fields"]["System.ChangedDate"].ToString();
+
+            if (pr.Status?.ToLower() == PR_ACTIVE)
+            {
+                var lastMergeCommitID = jsonPR?["lastMergeCommit"]?["commitId"]?.ToString();
+                var lastMergeCommit = GetCommitByID(pr.ProjectName, pr.RepoName, lastMergeCommitID!);
+
+                if  (lastMergeCommit != null)
+                {
+                    pr.ChangeDate = lastMergeCommit.TimeStamp;
+                }
+            }
 
             JsonArray? jsonReviewers = jsonPR?["reviewers"]?.AsArray();
             for (int j = 0; j < jsonReviewers?.Count; ++j)
@@ -940,7 +984,6 @@ namespace AzureTracker
         }
 
         #endregion
-
 
         private bool AzurePostRequestWithPAT(string uri, string query, string PAT, out string response)
         {
