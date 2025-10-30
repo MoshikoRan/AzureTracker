@@ -567,11 +567,10 @@ namespace AzureTracker
                     {
                         witIDs.Remove(id);
                         dicWorkItems.Remove(id);
-                        
-                        GetWorkItemsByIDs(dicWorkItems, witIDs);
                         break;
                     }
                 }
+                GetWorkItemsByIDs(dicWorkItems, witIDs);
             }
             else
             {
@@ -1046,40 +1045,40 @@ namespace AzureTracker
 
         internal bool SyncAzureObject(AzureObjectBase? aob)
         {
+            Dictionary<Int64, AzureObjectBase>? dic = null;
             string uri = string.Empty;
             
             if (aob is PR)
             {
                 uri = $"{AzureEndPoint}/{aob?.ProjectName}/_apis/git/pullrequests/{aob?.ID}?{API_VERSION}";
+                dic = PRs;
             }
             else if (aob is WorkItem)
             {
                 uri = $"{AzureEndPoint}/{aob?.ProjectName}/_apis/wit/workitems/{aob?.ID}?{API_VERSION}";
+                dic = WorkItems;
             }
             else if (aob is Build)
             {
                 uri = $"{AzureEndPoint}/{aob?.ProjectName}/_apis/build/builds/{aob?.ID}?{API_VERSION}";
+                dic = Builds;
             }
 
             string sResponse = string.Empty;
             if (AzureGetRequest(uri, out sResponse))
             {
                 AzureObjectBase? updatedAob = null;
-                Dictionary<Int64, AzureObjectBase>? dic = null;
                 JsonNode? jsonNode = JsonNode.Parse(sResponse);
                 if (aob is PR)
                 {
-                    dic = PRs;
                     updatedAob = ParsePR(jsonNode);
                 }
                 else if (aob is WorkItem)
                 {
-                    dic = WorkItems;
                     updatedAob = ParseWIT(jsonNode);
                 }
                 else if (aob is Build)
                 {
-                    dic = Builds;
                     updatedAob = ParseBuild(jsonNode);
                 }
 
@@ -1090,6 +1089,15 @@ namespace AzureTracker
                         dic[updatedAob.ID] = updatedAob;
                         return true;
                     }
+                }
+            }
+            else if (sResponse.Contains("TF401232")) //item does not exist, or you do not have permissions to read it
+            {
+                if (dic != null && aob != null)
+                {
+                    dic.Remove(aob.ID);
+                    aob.ID = -1; //item is invalid
+                    return true;
                 }
             }
             else

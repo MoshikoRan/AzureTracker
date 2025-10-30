@@ -196,7 +196,8 @@ namespace AzureTracker
         }
         private void OnViewItem(AzureObjectBase? aob)
         {
-            AddOrSelectTab(aob?.Uri?.AbsoluteUri, GetTabHeader(aob));
+            if (aob?.ID > 0)
+                AddOrSelectTab(aob?.Uri?.AbsoluteUri, GetTabHeader(aob));
         }
 
         private void AddOrSelectTab(string? uri, string header)
