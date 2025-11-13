@@ -1,4 +1,5 @@
 ﻿using Microsoft.TeamFoundation.SourceControl.WebApi;
+using Microsoft.VisualStudio.Services.Common;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -72,6 +73,8 @@ namespace AzureTracker
         public string? IsDraft { get; internal set; } = string.Empty;
 
         public DateTime? CreatedDate { get; set; }
+
+        public DateTime? ChangeDate { get; set; }
     }
 
     public class Build : AzureObjectBase 
@@ -317,13 +320,56 @@ namespace AzureTracker
                 default:
                     foreach (AzureObject ao in (AzureObject[])Enum.GetValues(typeof(AzureObject)))
                     {
-                        if (ao != AzureObject.None && !Aborting)
+                        if (ao != AzureObject.None)
                             Sync(ao);
                     }
                     break;
             }
+
             SetSyncInProgress(false);
         }
+
+        private List<long> GetLatestWITChanges(string? projName, DateTime fromDate)
+        {
+            List<long> lstWITIDs = new List<long>();
+
+            string formattedDate = fromDate.ToUniversalTime().ToString("yyyy-MM-dd");
+
+            if (projName != null)
+            {
+                string wiqlQuery = "{\n \"query\":\""
+                    + $"SELECT [System.Id] FROM WorkItems WHERE (([System.TeamProject] = '{projName}') "
+                    + $"AND ([System.ChangedDate] > '{formattedDate}')) "
+                    + $"ORDER BY [System.ChangedDate] DESC "
+                    + "\" \n}";
+                string uri = $"{AzureEndPoint}/{projName}/_apis/wit/wiql?{API_VERSION}";
+                string sResponse = string.Empty;
+
+                if (AzurePostRequest(uri, wiqlQuery, out sResponse))
+                {
+                    JsonNode? json = JsonNode.Parse(sResponse);
+                    if (json != null)
+                    {
+                        var workitems = json?["workItems"]?.AsArray();
+
+                        for (int i = 0; i < workitems?.Count; ++i)
+                        {
+                            JsonNode? wit = workitems[i];
+                            var strID = wit?["id"]?.ToString();
+                            if (strID != null)
+                                lstWITIDs.Add(long.Parse(strID));
+                        }
+                    }
+                }
+                else
+                {
+                    throw new Exception($"GetLatestWITChanges => {sResponse}");
+                }
+            }
+
+            return lstWITIDs;
+        }
+
         private List<Project?> GetProjectList()
         {
             List<Project?> lstProjects = new List<Project?>();
@@ -394,21 +440,16 @@ namespace AzureTracker
                 GetWorkItemsByProject(dicWorkItems, Projects?[i]);
                 DataFetchEvent?.Invoke(AzureObject.WorkItem, Projects?[i]?.Name, $"took {(DateTime.Now - dt).TotalSeconds} seconds");
             }
-
+            WITUpdateFromDate = DateTime.Now;
             return dicWorkItems;
         }
 
-        private bool IsActiveWorkItem(AzureObjectBase x)
-        {
-            return (x.Status != "Verified" && x.Status != "Closed" && x.Status != "Removed");
-        }
+        private DateTime WITUpdateFromDate = DateTime.Now.AddDays(-30);
 
         private void GetWorkItemsByProject(Dictionary<Int64, AzureObjectBase> dicWorkItems, Project? p)
         {
-            bool success = false;
-
             const int WIT_PER_CALL = 19999;
-
+            const int WIT_BY_ID_PER_CALL = 199;
             Int64 skip = -1;
             if (dicWorkItems.Count > 0) //not first time
             {
@@ -417,54 +458,30 @@ namespace AzureTracker
                 {
                     skip = projWITs.First().ID;
                 }
-                //update open items per project
-                var openProjItems = projWITs.Where(x => IsActiveWorkItem(x)).Select(x => x.ID).ToList();
-
-                if (openProjItems.Count() > 0)
-                {
-                    int count = 199;
-                    for (int i = 0; i < openProjItems.Count(); i += count)
-                    {
-                        if (Aborting)
-                            break;
-                        List<Int64> lstIDRange = openProjItems.GetRange(i, Math.Min(openProjItems.Count - i, count));
-                        if (lstIDRange?.Count > 0)
-                            GetWorkItemsByIDs(dicWorkItems, lstIDRange, true);
-                    }
-                }
             }
 
             string sResponse = string.Empty;
-            using (HttpClient client = new HttpClient())
+
+            var hsWitID = new HashSet<Int64>();
+            while (true)
             {
-                SetClientAuth(client, m_APConfig.PAT);
-                while (true)
+                if (Aborting)
+                    break;
+
+                var jsonstr = "{\n \"query\":\""
+                    + $"SELECT [System.Id] FROM WorkItems Where (([System.TeamProject] = '{p?.Name}')"
+                    + $"{m_witTypeSubQuery} AND ([System.Id]>{skip})) "
+                    + $"ORDER BY [System.Id] ASC"
+                    + "\" \n}";
+                string uri = $"{AzureEndPoint}/{p?.Name}/_apis/wit/wiql?{API_VERSION}&$top={WIT_PER_CALL}";
+
+                if (AzurePostRequest(uri, jsonstr, out sResponse))
                 {
-                    if (Aborting)
-                        break;
+                    JsonNode? json = JsonNode.Parse(sResponse);
+                    JsonArray? jsonWITs = json?["workItems"]?.AsArray();
 
-                    var jsonstr = "{\n \"query\":\""
-                        + $"SELECT [System.Id] FROM WorkItems Where (([System.TeamProject] = '{p?.Name}')"
-                        + $"{m_witTypeSubQuery} AND ([System.Id]>{skip})) "
-                        + $"ORDER BY [System.Id] ASC"
-                        + "\" \n}";
-
-                    HttpContent body = new StringContent(jsonstr, Encoding.UTF8, "application/json");
-                    string uri = $"{AzureEndPoint}/{p?.Name}/_apis/wit/wiql?{API_VERSION}&$top={WIT_PER_CALL}";
-                    var responseTask = client.PostAsync(uri, body);
-                    sResponse = responseTask.Result.Content.ReadAsStringAsync().Result;
-
-                    success = responseTask.Result.StatusCode == HttpStatusCode.OK;
-
-                    if (success)
+                    if (jsonWITs?.Count > 0)
                     {
-                        JsonNode? json = JsonNode.Parse(sResponse);
-                        JsonArray? jsonWITs = json?["workItems"]?.AsArray();
-                        
-                        if (jsonWITs?.Count == 0)
-                            break;
-
-                        var lstWitID = new List<Int64>();
                         for (int i = 0; i < jsonWITs?.Count; ++i)
                         {
                             JsonNode? jsonWIT = jsonWITs[i];
@@ -472,34 +489,45 @@ namespace AzureTracker
 
                             if (nID.HasValue)
                             {
-                                lstWitID.Add(nID.Value);
+                                hsWitID.Add(nID.Value);
                                 if (skip < nID.Value)
                                     skip = nID.Value;
                             }
                         }
-                        int count = 199;
-                        for (int i = 0; i < lstWitID.Count; i += count)
-                        {
-                            if (Aborting)
-                                break;
-
-                            List<Int64> lstIDRange = lstWitID.GetRange(i, Math.Min(lstWitID.Count - i, count));
-                            if (lstIDRange?.Count > 0)
-                                GetWorkItemsByIDs(dicWorkItems, lstIDRange, false);
-                        }
                     }
                     else
                     {
-                        throw new Exception($"GetWorkItemsByProject => {sResponse}");
+                        break;
                     }
+                }
+                else
+                {
+                    throw new Exception($"GetWorkItemsByProject => {sResponse}");
+                }
+            }
+
+            //update changed items per project
+            hsWitID.AddRange(GetLatestWITChanges(p?.Name, WITUpdateFromDate));
+
+            if (hsWitID.Count > 0)
+            {
+                Logger.Instance.Info($"updating {hsWitID.Count} work items from {p?.Name}");
+
+                var lstWitID = hsWitID.ToList();
+                for (int i = 0; i < lstWitID.Count; i += WIT_BY_ID_PER_CALL)
+                {
+                    if (Aborting)
+                        break;
+
+                    List<Int64> lstIDRange = lstWitID.GetRange(i, Math.Min(lstWitID.Count - i, WIT_BY_ID_PER_CALL));
+                    if (lstIDRange?.Count > 0)
+                        GetWorkItemsByIDs(dicWorkItems, lstIDRange);
                 }
             }
         }
 
-        private void GetWorkItemsByIDs(Dictionary<Int64, AzureObjectBase> dicWorkItems, List<Int64> witIDs, bool bUpdate)
+        private void GetWorkItemsByIDs(Dictionary<Int64, AzureObjectBase> dicWorkItems, List<Int64> witIDs)
         {
-            Logger.Instance.Info($"GetWorkItemsByIDs => range {witIDs.Min()} - {witIDs.Max()}");
-
             string witStrIDs = string.Empty;
             foreach (int? id in witIDs)
             {
@@ -526,16 +554,7 @@ namespace AzureTracker
                     if (jsonWIT != null)
                     {
                         WorkItem wit = ParseWIT(jsonWIT);
-                        if (bUpdate)
-                        {
-                            var item = dicWorkItems[wit.ID];
-                            if (item.Status != wit.Status)
-                                item.Status = wit.Status;
-                        }
-                        else
-                        {
-                            dicWorkItems[wit.ID] = wit;
-                        }
+                        dicWorkItems[wit.ID] = wit;
                     }
                 }
             }
@@ -548,11 +567,10 @@ namespace AzureTracker
                     {
                         witIDs.Remove(id);
                         dicWorkItems.Remove(id);
-                        
-                        GetWorkItemsByIDs(dicWorkItems, witIDs, bUpdate);
                         break;
                     }
                 }
+                GetWorkItemsByIDs(dicWorkItems, witIDs);
             }
             else
             {
@@ -652,31 +670,35 @@ namespace AzureTracker
             }
         }
 
+        private Commit GetCommitByID(string? p, string? r, string commitID)
+        {
+            //GET https://dev.azure.com/{organization}/{project}/_apis/git/repositories/{repositoryId}/commits/{commitId}?api-version=7.1
+            string sResponse = string.Empty;
+            string uri =
+                $"{AzureEndPoint}/{p}/_apis/git/repositories/{r}/commits/{commitID}?{API_VERSION}";
+            if (AzureGetRequest(uri, out sResponse))
+            {
+                JsonNode? json = JsonNode.Parse(sResponse);
+                if (json != null)
+                {
+                    return ParseCommit(json, p, r);
+                }
+            }
+            else
+            {
+                throw new Exception($"GetCommitByID => {sResponse}");
+            }
+            return new Commit();
+        }
+
         private void ParseCommits(Dictionary<Int64, AzureObjectBase> dicCommits, JsonNode jsonCommit, string? p, string? r)
         {
             JsonArray? jsonCommits = jsonCommit?["value"]?.AsArray();
             for (int j = 0; j < jsonCommits?.Count; ++j)
             {
-                Commit commit = new Commit();
-
-                var id = jsonCommits[j]?["commitId"]?.GetValue<string>();
-                if (!string.IsNullOrWhiteSpace(id))
+                Commit commit = ParseCommit(jsonCommits[j], p, r);
+                if (!string.IsNullOrWhiteSpace(commit.CommitID))
                 {
-                    commit.ID = Int64.Parse(id.Substring(id.Length-8), System.Globalization.NumberStyles.HexNumber);
-                    commit.CommitID = id;
-                    commit.ProjectName = p;
-                    commit.RepoName = r;
-                    commit.CreatedBy = jsonCommits[j]?["committer"]?["name"]?.ToString();
-                    commit.Title = jsonCommits[j]?["comment"]?.ToString();
-                    commit.TimeStamp = jsonCommits[j]?["committer"]?["date"]?.GetValue<DateTime>();
-                    commit.Status = $"Add:{jsonCommits[j]?["changeCounts"]?["Add"]?.ToString()}" +
-                        $", Edit: {jsonCommits[j]?["changeCounts"]?["Edit"]?.ToString()}" +
-                        $", Delete: {jsonCommits[j]?["changeCounts"]?["Delete"]?.ToString()}";
-                    var uri = jsonCommits[j]?["remoteUrl"]?.ToString();
-
-                    if (!string.IsNullOrWhiteSpace(uri))
-                        commit.Uri = new UriBuilder(uri).Uri;
-
                     while(dicCommits.ContainsKey(commit.ID))
                     {
                         Logger.Instance.Warn($"Commit ID {commit.ID} already exists. generating new...");
@@ -689,6 +711,32 @@ namespace AzureTracker
                     throw new Exception($"ParseCommits => commitid is invalid");
                 }
             }
+        }
+
+        Commit ParseCommit(JsonNode? jsonCommit, string? p, string? r)
+        {
+            Commit commit = new Commit();
+
+            var id = jsonCommit?["commitId"]?.GetValue<string>();
+            if (!string.IsNullOrWhiteSpace(id))
+            {
+                commit.ID = Int64.Parse(id.Substring(id.Length - 8), System.Globalization.NumberStyles.HexNumber);
+                commit.CommitID = id;
+                commit.ProjectName = p;
+                commit.RepoName = r;
+                commit.CreatedBy = jsonCommit?["committer"]?["name"]?.ToString();
+                commit.Title = jsonCommit?["comment"]?.ToString();
+                commit.TimeStamp = jsonCommit?["committer"]?["date"]?.GetValue<DateTime>();
+                commit.Status = $"Add:{jsonCommit?["changeCounts"]?["Add"]?.ToString()}" +
+                    $", Edit: {jsonCommit?["changeCounts"]?["Edit"]?.ToString()}" +
+                    $", Delete: {jsonCommit?["changeCounts"]?["Delete"]?.ToString()}";
+                var uri = jsonCommit?["remoteUrl"]?.ToString();
+
+                if (!string.IsNullOrWhiteSpace(uri))
+                    commit.Uri = new UriBuilder(uri).Uri;
+            }
+
+            return commit;
         }
 
         #endregion
@@ -711,6 +759,8 @@ namespace AzureTracker
             return dicPRs;
         }
 
+        readonly string PR_ACTIVE = PullRequestStatus.Active.ToString().ToLower();
+
         private void GetPRsByProject(Dictionary<Int64, AzureObjectBase> dicPRs, Project? p, PullRequestStatus status)
         {
             const int PRS_PER_CALL = 101;
@@ -718,9 +768,8 @@ namespace AzureTracker
             HashSet<Int64>? activePRs = null;
             if (status == PullRequestStatus.Active)
             {
-                string sActive = PullRequestStatus.Active.ToString().ToLower();
                 activePRs = PRs.Where(
-                    pr => pr.Value.Status == sActive &&
+                    pr => pr.Value.Status == PR_ACTIVE &&
                     pr.Value.ProjectName == p?.Name)
                     .Select(p => p.Value.ID).ToHashSet();
             }
@@ -814,6 +863,17 @@ namespace AzureTracker
 
             pr.IsDraft = jsonPR?["isDraft"]?.ToString();
             //pr.ChangedDate = jsonWIT["fields"]["System.ChangedDate"].ToString();
+
+            if (pr.Status?.ToLower() == PR_ACTIVE)
+            {
+                var lastMergeCommitID = jsonPR?["lastMergeCommit"]?["commitId"]?.ToString();
+                var lastMergeCommit = GetCommitByID(pr.ProjectName, pr.RepoName, lastMergeCommitID!);
+
+                if  (lastMergeCommit != null)
+                {
+                    pr.ChangeDate = lastMergeCommit.TimeStamp;
+                }
+            }
 
             JsonArray? jsonReviewers = jsonPR?["reviewers"]?.AsArray();
             for (int j = 0; j < jsonReviewers?.Count; ++j)
@@ -924,6 +984,28 @@ namespace AzureTracker
 
         #endregion
 
+        private bool AzurePostRequestWithPAT(string uri, string query, string PAT, out string response)
+        {
+            bool success = false;
+            using (HttpClient client = new HttpClient())
+            {
+                SetClientAuth(client, PAT);
+
+                HttpContent body = new StringContent(query, Encoding.UTF8, "application/json");
+                var responseTask = client.PostAsync(uri, body);
+
+                response = responseTask.Result.Content.ReadAsStringAsync().Result;
+                success = responseTask.Result.StatusCode == HttpStatusCode.OK;
+            }
+
+            return success;
+        }
+
+        private bool AzurePostRequest(string uri, string query, out string response)
+        {
+            return AzurePostRequestWithPAT(uri, query, m_APConfig.PAT, out response);
+        }
+
         private bool AzureGetRequestWithPAT(string uri, string PAT, out string response)
         {
             bool success = false;
@@ -963,40 +1045,40 @@ namespace AzureTracker
 
         internal bool SyncAzureObject(AzureObjectBase? aob)
         {
+            Dictionary<Int64, AzureObjectBase>? dic = null;
             string uri = string.Empty;
             
             if (aob is PR)
             {
                 uri = $"{AzureEndPoint}/{aob?.ProjectName}/_apis/git/pullrequests/{aob?.ID}?{API_VERSION}";
+                dic = PRs;
             }
             else if (aob is WorkItem)
             {
                 uri = $"{AzureEndPoint}/{aob?.ProjectName}/_apis/wit/workitems/{aob?.ID}?{API_VERSION}";
+                dic = WorkItems;
             }
             else if (aob is Build)
             {
                 uri = $"{AzureEndPoint}/{aob?.ProjectName}/_apis/build/builds/{aob?.ID}?{API_VERSION}";
+                dic = Builds;
             }
 
             string sResponse = string.Empty;
             if (AzureGetRequest(uri, out sResponse))
             {
                 AzureObjectBase? updatedAob = null;
-                Dictionary<Int64, AzureObjectBase>? dic = null;
                 JsonNode? jsonNode = JsonNode.Parse(sResponse);
                 if (aob is PR)
                 {
-                    dic = PRs;
                     updatedAob = ParsePR(jsonNode);
                 }
                 else if (aob is WorkItem)
                 {
-                    dic = WorkItems;
                     updatedAob = ParseWIT(jsonNode);
                 }
                 else if (aob is Build)
                 {
-                    dic = Builds;
                     updatedAob = ParseBuild(jsonNode);
                 }
 
@@ -1007,6 +1089,15 @@ namespace AzureTracker
                         dic[updatedAob.ID] = updatedAob;
                         return true;
                     }
+                }
+            }
+            else if (sResponse.Contains("TF401232")) //item does not exist, or you do not have permissions to read it
+            {
+                if (dic != null && aob != null)
+                {
+                    dic.Remove(aob.ID);
+                    aob.ID = -1; //item is invalid
+                    return true;
                 }
             }
             else
