@@ -89,6 +89,8 @@ namespace AzureTracker
         public DateTime? FinishTime { get; set; }
 		
         public string? PoolName { get; set; } = string.Empty;
+
+        public string? Parameters { get; set; } = string.Empty;
     }
 
     public class Commit : AzureObjectBase
@@ -978,6 +980,8 @@ namespace AzureTracker
             build.PoolName = jsonBuild?["queue"]?["pool"]?["name"]?.ToString();
 
             build.Definition = jsonBuild?["definition"]?["name"]?.ToString();
+
+            build.Parameters = jsonBuild?["parameters"]?.ToString();
 
             return build;
         }
