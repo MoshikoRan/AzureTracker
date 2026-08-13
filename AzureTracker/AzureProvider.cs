@@ -418,7 +418,16 @@ namespace AzureTracker
                 for (int i = 0; i < jsonRepos?.Count; ++i)
                 {
                     JsonNode? jsonRepo = jsonRepos[i];
-                    repos.Add(jsonRepo?["name"]?.ToString());
+                    bool isDisabled = true;
+                    if (bool.TryParse(jsonRepo?["isDisabled"]?.ToString(), out isDisabled)
+                        && !isDisabled)
+                    {
+                        repos.Add(jsonRepo?["name"]?.ToString());
+                    }
+                    else
+                    {
+                        Logger.Instance.Info($"{jsonRepo?["name"]?.ToString()} repository in project {p.Name} is disabled.");
+                    }
                 }
 
                 return repos;
@@ -838,7 +847,7 @@ namespace AzureTracker
                     }
                     else
                     {
-                        throw new Exception($"GetPRsByProject => {sResponse}");
+                        Logger.Instance.Error($"GetPRsByProject => {sResponse}");
                     }
                 }
             }
