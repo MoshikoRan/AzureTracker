@@ -72,9 +72,13 @@ namespace AzureTracker
         public string? Reviewers { get; set; } = string.Empty;
         public string? IsDraft { get; internal set; } = string.Empty;
 
+        public string? ClosedBy { get; set; } = string.Empty;
+
         public DateTime? CreatedDate { get; set; }
 
         public DateTime? ChangeDate { get; set; }
+
+        public DateTime? ClosedDate { get; set; }
     }
 
     public class Build : AzureObjectBase 
@@ -865,12 +869,17 @@ namespace AzureTracker
             pr.Uri = new UriBuilder($"{AzureEndPoint}/{pr.ProjectName}/_git/{pr.RepoName}" + "/pullrequest/" + pr.ID).Uri;
             pr.Status = jsonPR?["status"]?.ToString();
             pr.CreatedBy = jsonPR?["createdBy"]?["displayName"]?.ToString();
+            pr.ClosedBy = jsonPR?["closedBy"]?["displayName"]?.ToString();
             pr.SourceBranch = jsonPR?["sourceRefName"]?.ToString();
             pr.TargetBranch = jsonPR?["targetRefName"]?.ToString();
             string? sDateTime = jsonPR?["creationDate"]?.ToString();
             DateTime dt;
             if (DateTime.TryParse(sDateTime, out dt))
                 pr.CreatedDate = dt;
+
+            sDateTime = jsonPR?["closedDate"]?.ToString();
+            if (DateTime.TryParse(sDateTime, out dt))
+                pr.ClosedDate = dt;
 
             pr.IsDraft = jsonPR?["isDraft"]?.ToString();
             //pr.ChangedDate = jsonWIT["fields"]["System.ChangedDate"].ToString();
@@ -1132,7 +1141,7 @@ namespace AzureTracker
                     var e1val = propObj1.GetValue(e1, null);
                     var e2val = propObj2?.GetValue(e2, null);
 
-                    if (e1val != null && !e1val.Equals(e2val))
+                    if ((e1val == null && e2val != null) || (e1val != null && !e1val.Equals(e2val)))
                         return false;
                 }
                 return true;
@@ -1141,3 +1150,4 @@ namespace AzureTracker
         }
     }
 }
+
